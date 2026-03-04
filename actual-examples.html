@@ -26,6 +26,7 @@
   --c-ppt:   #c9380a;
   --c-excel: #1a7a45;
   --c-mash:  #8b5cf6;
+  --c-word:  #2b5ebd;
   --c-other: #6b7590;
 }
 
@@ -147,6 +148,7 @@ body::before {
 .tab-btn[data-tab="ppt"]    { --tc: var(--c-ppt); }
 .tab-btn[data-tab="excel"]  { --tc: var(--c-excel); }
 .tab-btn[data-tab="mash"]   { --tc: var(--c-mash); }
+.tab-btn[data-tab="word"]   { --tc: var(--c-word); }
 .tab-btn[data-tab="other"]  { --tc: var(--c-other); }
 
 .tab-btn.active { background: var(--tc); border-color: var(--tc); }
@@ -242,6 +244,10 @@ main {
 .card-open[data-type="html"]:hover { background: var(--c-html); color: #fff; }
 .card-open[data-type="ppt"]  { color: var(--c-ppt);  border-color: var(--c-ppt); }
 .card-open[data-type="ppt"]:hover  { background: var(--c-ppt);  color: #fff; }
+.example-card[data-type="word"]:hover { border-color: var(--c-word); box-shadow: 0 0 0 1px var(--c-word), 0 12px 36px rgba(43,94,189,.12); }
+.card-meta[data-type="word"] .card-type { color: var(--c-word); }
+.card-open[data-type="word"] { color: var(--c-word); border-color: var(--c-word); }
+.card-open[data-type="word"]:hover { background: var(--c-word); color: #fff; }
 
 /* ── COMING SOON ── */
 .coming-soon {
@@ -341,6 +347,9 @@ footer {
     <button class="tab-btn" data-tab="mash">
       <span class="tab-dot"></span> Mashups
     </button>
+    <button class="tab-btn" data-tab="word">
+      <span class="tab-dot"></span> Word
+    </button>
     <button class="tab-btn" data-tab="other">
       <span class="tab-dot"></span> Other
     </button>
@@ -431,6 +440,39 @@ footer {
       <div class="cs-icon">🔗</div>
       <div class="cs-title">Coming Soon</div>
       <div class="cs-sub">Mashup examples are on their way</div>
+    </div>
+  </div>
+
+  <!-- WORD TAB -->
+  <div class="tab-content" id="tab-word">
+    <div class="example-grid">
+
+      <div class="example-card" data-type="word">
+        <div class="card-preview pdf-preview-wrap">
+          <iframe src="Documentation%20Prompt%201.pdf#toolbar=0&navpanes=0&view=FitH" title="Documentation Prompt 1 preview"></iframe>
+        </div>
+        <div class="card-info">
+          <div class="card-meta" data-type="word">
+            <div class="card-type">Word &nbsp;·&nbsp; Documentation</div>
+            <div class="card-title">Documentation Prompt 1</div>
+          </div>
+          <a href="Documentation%20Prompt%201.pdf" target="_blank" class="card-open" data-type="word">Open</a>
+        </div>
+      </div>
+
+      <div class="example-card" data-type="word">
+        <div class="card-preview pdf-preview-wrap">
+          <iframe src="Documentation%20Prompt%202.pdf#toolbar=0&navpanes=0&view=FitH" title="Documentation Prompt 2 preview"></iframe>
+        </div>
+        <div class="card-info">
+          <div class="card-meta" data-type="word">
+            <div class="card-type">Word &nbsp;·&nbsp; Documentation</div>
+            <div class="card-title">Documentation Prompt 2</div>
+          </div>
+          <a href="Documentation%20Prompt%202.pdf" target="_blank" class="card-open" data-type="word">Open</a>
+        </div>
+      </div>
+
     </div>
   </div>
 
