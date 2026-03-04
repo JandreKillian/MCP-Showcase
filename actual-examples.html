@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actual Examples — Qlik MCP Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:   #060810;
+  --deep:   #0b0e1a;
+  --panel:  #10151f;
+  --raised: #151c2a;
+  --rim:    #1e2a3d;
+  --rim2:   #28374f;
+  --accent: #009845;
+  --blue:   #4a9eff;
+  --orange: #e8562a;
+  --text:   #dde8f8;
+  --soft:   #8a9fbc;
+  --ghost:  #3a4f68;
+
+  --c-html:  #4a9eff;
+  --c-ppt:   #c9380a;
+  --c-excel: #1a7a45;
+  --c-mash:  #8b5cf6;
+  --c-other: #6b7590;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 10% 0%, rgba(0,152,69,.09) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 55% at 90% 100%, rgba(74,158,255,.07) 0%, transparent 60%);
+}
+
+/* ── HEADER ── */
+#header {
+  position: relative; z-index: 10;
+  padding: 0 5vw;
+  border-bottom: 1px solid var(--rim);
+  background: rgba(6,8,16,.97);
+}
+
+.header-inner {
+  padding: 40px 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kicker {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3.5px; text-transform: uppercase;
+  color: var(--accent);
+  display: flex; align-items: center; gap: 12px;
+}
+.kicker::before { content: ''; width: 36px; height: 1.5px; background: var(--accent); }
+
+.page-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(44px, 7vw, 80px);
+  line-height: .92; letter-spacing: 1px;
+}
+.page-title .a { color: var(--accent); }
+.page-title .b { color: var(--blue); }
+
+/* ── STATEMENT BANNER ── */
+.statement {
+  position: relative; z-index: 5;
+  margin: 0 5vw;
+  padding: 24px 28px;
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  margin-top: 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+.statement-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.statement-body {}
+.statement-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+.statement-text {
+  font-size: 15px; line-height: 1.7; color: var(--text);
+  max-width: 760px;
+}
+.statement-text strong { color: var(--accent); font-weight: 600; }
+
+/* ── TAB NAV ── */
+.tab-nav-wrap {
+  position: relative; z-index: 5;
+  padding: 36px 5vw 0;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 12px 28px;
+  border-radius: 3px;
+  border: 1px solid var(--rim2);
+  background: var(--panel);
+  color: var(--soft);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: center; gap: 10px;
+}
+.tab-btn .tab-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: currentColor; opacity: .5;
+  transition: opacity .2s;
+}
+.tab-btn:hover { color: var(--text); border-color: var(--rim2); }
+.tab-btn.active { color: #fff; }
+
+.tab-btn[data-tab="html"]   { --tc: var(--c-html); }
+.tab-btn[data-tab="ppt"]    { --tc: var(--c-ppt); }
+.tab-btn[data-tab="excel"]  { --tc: var(--c-excel); }
+.tab-btn[data-tab="mash"]   { --tc: var(--c-mash); }
+.tab-btn[data-tab="other"]  { --tc: var(--c-other); }
+
+.tab-btn.active { background: var(--tc); border-color: var(--tc); }
+.tab-btn.active .tab-dot { opacity: 1; }
+
+/* ── MAIN CONTENT ── */
+main {
+  position: relative; z-index: 5;
+  padding: 40px 5vw 100px;
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── EXAMPLE GRID ── */
+.example-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
+  gap: 24px;
+}
+
+.example-card {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: border-color .25s, box-shadow .25s, transform .2s;
+}
+.example-card:hover { transform: translateY(-2px); }
+
+.example-card[data-type="html"]:hover  { border-color: var(--c-html);  box-shadow: 0 0 0 1px var(--c-html),  0 12px 36px rgba(74,158,255,.12); }
+.example-card[data-type="ppt"]:hover   { border-color: var(--c-ppt);   box-shadow: 0 0 0 1px var(--c-ppt),   0 12px 36px rgba(201,56,10,.12); }
+
+.card-preview {
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  position: relative;
+  background: var(--deep);
+  flex-shrink: 0;
+}
+.card-preview iframe {
+  width: 200%; height: 200%;
+  transform: scale(.5);
+  transform-origin: top left;
+  pointer-events: none;
+  border: none;
+}
+.card-preview.pdf-preview-wrap {
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+  background: var(--raised);
+}
+.card-preview.pdf-preview-wrap iframe {
+  width: 100%; height: 100%;
+  transform: none;
+  pointer-events: none;
+  border: none;
+}
+
+.card-info {
+  padding: 18px 20px 22px;
+  border-top: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-meta .card-type {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.card-meta[data-type="html"] .card-type { color: var(--c-html); }
+.card-meta[data-type="ppt"]  .card-type { color: var(--c-ppt); }
+
+.card-meta .card-title {
+  font-weight: 600; font-size: 16px;
+  color: var(--text); line-height: 1.3;
+}
+.card-open {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  text-decoration: none; white-space: nowrap; flex-shrink: 0;
+  padding: 7px 14px; border-radius: 2px; border: 1px solid;
+  transition: background .2s, color .2s;
+}
+.card-open[data-type="html"] { color: var(--c-html); border-color: var(--c-html); }
+.card-open[data-type="html"]:hover { background: var(--c-html); color: #fff; }
+.card-open[data-type="ppt"]  { color: var(--c-ppt);  border-color: var(--c-ppt); }
+.card-open[data-type="ppt"]:hover  { background: var(--c-ppt);  color: #fff; }
+
+/* ── COMING SOON ── */
+.coming-soon {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 320px; gap: 16px; text-align: center;
+  border: 1px dashed var(--rim2); border-radius: 4px;
+  padding: 60px 40px;
+}
+.coming-soon .cs-icon {
+  font-size: 48px; line-height: 1; opacity: .4;
+}
+.coming-soon .cs-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px; letter-spacing: 1px; color: var(--ghost);
+}
+.coming-soon .cs-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ghost);
+}
+
+/* ── HOME BTN ── */
+.home-btn {
+  position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase;
+  text-decoration: none; color: var(--accent);
+  border: 1px solid var(--accent); padding: 9px 18px; border-radius: 3px;
+  background: rgba(6,8,16,.92); backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  transition: background .2s, color .2s, box-shadow .2s;
+}
+.home-btn:hover { background: var(--accent); color: #fff; box-shadow: 0 4px 24px rgba(0,152,69,.3); }
+.home-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ── FOOTER ── */
+footer {
+  position: relative; z-index: 5;
+  padding: 28px 5vw;
+  border-top: 1px solid var(--rim);
+  background: rgba(6,8,16,.95);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.footer-brand { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+.footer-brand .q { color: var(--accent); }
+.footer-note { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1.5px; color: var(--ghost); }
+
+@media (max-width: 640px) {
+  .statement { flex-direction: column; }
+  .tab-btn { padding: 10px 18px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<a href="index.html" class="home-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Home
+</a>
+
+<!-- HEADER -->
+<header id="header">
+  <div class="header-inner">
+    <div class="kicker">Qlik MCP Showcase &nbsp;/&nbsp; Live Output</div>
+    <h1 class="page-title">
+      <span class="a">Actual</span> <span class="b">Examples</span>
+    </h1>
+  </div>
+</header>
+
+<!-- STATEMENT -->
+<div class="statement">
+  <div class="statement-icon">⚡</div>
+  <div class="statement-body">
+    <div class="statement-label">How these were made</div>
+    <p class="statement-text">
+      Using prompts similar to the ones in this showcase, these are <strong>real, live outputs</strong>
+      produced entirely using <strong>Qlik MCP + Claude AI</strong> — no manual formatting,
+      no templates, no post-processing. Just a prompt, and this is what came out.
+    </p>
+  </div>
+</div>
+
+<!-- TAB NAV -->
+<div class="tab-nav-wrap">
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="html">
+      <span class="tab-dot"></span> HTML
+    </button>
+    <button class="tab-btn" data-tab="ppt">
+      <span class="tab-dot"></span> PowerPoints
+    </button>
+    <button class="tab-btn" data-tab="excel">
+      <span class="tab-dot"></span> Excel
+    </button>
+    <button class="tab-btn" data-tab="mash">
+      <span class="tab-dot"></span> Mashups
+    </button>
+    <button class="tab-btn" data-tab="other">
+      <span class="tab-dot"></span> Other
+    </button>
+  </nav>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- HTML TAB -->
+  <div class="tab-content active" id="tab-html">
+    <div class="example-grid">
+
+      <div class="example-card" data-type="html">
+        <div class="card-preview">
+          <iframe src="vendor-defect-network.html" loading="lazy" tabindex="-1" aria-hidden="true" title="Vendor Defect Network preview"></iframe>
+        </div>
+        <div class="card-info">
+          <div class="card-meta" data-type="html">
+            <div class="card-type">HTML &nbsp;·&nbsp; Network Visualisation</div>
+            <div class="card-title">Vendor Defect Network</div>
+          </div>
+          <a href="vendor-defect-network.html" target="_blank" class="card-open" data-type="html">Open</a>
+        </div>
+      </div>
+
+      <div class="example-card" data-type="html">
+        <div class="card-preview">
+          <iframe src="defects-dashboard.html" loading="lazy" tabindex="-1" aria-hidden="true" title="Defects Dashboard preview"></iframe>
+        </div>
+        <div class="card-info">
+          <div class="card-meta" data-type="html">
+            <div class="card-type">HTML &nbsp;·&nbsp; Analytics Dashboard</div>
+            <div class="card-title">Defects Dashboard</div>
+          </div>
+          <a href="defects-dashboard.html" target="_blank" class="card-open" data-type="html">Open</a>
+        </div>
+      </div>
+
+      <div class="example-card" data-type="html">
+        <div class="card-preview">
+          <iframe src="defective-products-dashboard.html" loading="lazy" tabindex="-1" aria-hidden="true" title="Defective Products Dashboard preview"></iframe>
+        </div>
+        <div class="card-info">
+          <div class="card-meta" data-type="html">
+            <div class="card-type">HTML &nbsp;·&nbsp; KPI Dashboard</div>
+            <div class="card-title">Defective Products Dashboard</div>
+          </div>
+          <a href="defective-products-dashboard.html" target="_blank" class="card-open" data-type="html">Open</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- POWERPOINTS TAB -->
+  <div class="tab-content" id="tab-ppt">
+    <div class="example-grid">
+
+      <div class="example-card" data-type="ppt">
+        <div class="card-preview pdf-preview-wrap">
+          <iframe src="Board%20Pack%20PowerPoint.pdf#toolbar=0&navpanes=0&view=FitH" title="Board Pack preview"></iframe>
+        </div>
+        <div class="card-info">
+          <div class="card-meta" data-type="ppt">
+            <div class="card-type">PowerPoint &nbsp;·&nbsp; Executive Presentation</div>
+            <div class="card-title">Board Pack</div>
+          </div>
+          <a href="Board%20Pack%20PowerPoint.pdf" target="_blank" class="card-open" data-type="ppt">Open</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EXCEL TAB -->
+  <div class="tab-content" id="tab-excel">
+    <div class="coming-soon">
+      <div class="cs-icon">📊</div>
+      <div class="cs-title">Coming Soon</div>
+      <div class="cs-sub">Excel examples are on their way</div>
+    </div>
+  </div>
+
+  <!-- MASHUPS TAB -->
+  <div class="tab-content" id="tab-mash">
+    <div class="coming-soon">
+      <div class="cs-icon">🔗</div>
+      <div class="cs-title">Coming Soon</div>
+      <div class="cs-sub">Mashup examples are on their way</div>
+    </div>
+  </div>
+
+  <!-- OTHER TAB -->
+  <div class="tab-content" id="tab-other">
+    <div class="coming-soon">
+      <div class="cs-icon">📁</div>
+      <div class="cs-title">Coming Soon</div>
+      <div class="cs-sub">More examples are on their way</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-brand"><span class="q">Qlik</span> MCP Showcase</div>
+  <div class="footer-note">Model Context Protocol &nbsp;·&nbsp; Corpsolve</div>
+</footer>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const contents = document.querySelectorAll('.tab-content');
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

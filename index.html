@@ -419,6 +419,113 @@ main {
   transform: translateX(4px);
 }
 
+/* ── PDF CLICKABLE OVERLAY ── */
+.pdf-preview-wrap {
+  position: relative;
+  cursor: pointer;
+}
+.pdf-preview-wrap .pdf-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: transparent;
+}
+.pdf-preview-wrap:hover::after {
+  content: 'Click to open';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6,8,16,.55);
+  backdrop-filter: blur(2px);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--orange);
+  z-index: 3;
+}
+
+/* ── ACTUAL EXAMPLES TEASER ── */
+.examples-statement {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.examples-statement-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+.examples-statement-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 6px;
+}
+.examples-statement-text { font-size: 14px; line-height: 1.7; color: var(--soft); }
+.examples-statement-text strong { color: var(--text); font-weight: 600; }
+
+.examples-teaser-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.teaser-card {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.teaser-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 24px rgba(0,152,69,.10); }
+.teaser-thumb {
+  width: 100%; height: 160px;
+  overflow: hidden; position: relative;
+  background: var(--deep);
+}
+.teaser-thumb iframe {
+  width: 200%; height: 200%;
+  transform: scale(.5); transform-origin: top left;
+  pointer-events: none; border: none;
+}
+.teaser-thumb.is-pdf {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--raised);
+}
+.teaser-thumb.is-pdf iframe { width: 100%; height: 100%; transform: none; }
+.teaser-foot {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--rim);
+}
+.teaser-type {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 4px;
+}
+.teaser-name { font-weight: 600; font-size: 14px; color: var(--text); }
+
+.examples-cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  text-decoration: none;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 10px 22px; border-radius: 2px;
+  transition: background .2s, color .2s;
+}
+.examples-cta:hover { background: var(--accent); color: #fff; }
+.examples-cta::after { content: '→'; transition: transform .2s; }
+.examples-cta:hover::after { transform: translateX(4px); }
+
 /* ── DASHBOARD CARD ── */
 .dashboard-card {
   background: var(--panel);
@@ -615,7 +722,7 @@ footer {
   <nav class="nav-pills">
     <a href="#videos">Demo Videos</a>
     <a href="#pages">Interactive Pages</a>
-    <a href="#dashboard">Dashboard</a>
+    <a href="actual-examples.html">Actual Examples</a>
     <a href="#docs">Documentation</a>
     <a href="https://www.linkedin.com/in/jandre-killian/" target="_blank" rel="noopener noreferrer" class="linkedin">
       <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
@@ -723,35 +830,70 @@ footer {
     </div>
   </section>
 
-  <!-- DASHBOARD -->
-  <section id="dashboard">
+  <!-- ACTUAL EXAMPLES -->
+  <section id="examples">
     <div class="section-header">
       <span class="section-label">03</span>
-      <h2 class="section-title">Dashboard</h2>
+      <h2 class="section-title">Actual Examples</h2>
     </div>
-    <div class="dashboard-card">
-      <div class="dashboard-preview">
-        <iframe
-          src="defective-products-dashboard.html"
-          title="Preview: Defective Products Dashboard"
-          tabindex="-1"
-          aria-hidden="true"
-          loading="lazy">
-        </iframe>
+
+    <div class="examples-statement">
+      <div class="examples-statement-icon">⚡</div>
+      <div>
+        <div class="examples-statement-label">How these were made</div>
+        <p class="examples-statement-text">
+          Using prompts similar to those in this showcase, these are <strong>real, live outputs</strong>
+          produced entirely using <strong>Qlik MCP + Claude AI</strong> —
+          no manual formatting, no templates, no post-processing. Just a prompt.
+        </p>
       </div>
-      <div class="prompt-strip">
-        <span class="prompt-strip-label">Prompt Used</span>
-        <span class="prompt-strip-text">Fetch the defective products data from my Qlik app and build a standalone HTML dashboard with KPIs, charts, and styled visuals.</span>
-        <button class="prompt-strip-copy" onclick="navigator.clipboard.writeText('Fetch the defective products data from my Qlik app and build a standalone HTML dashboard with KPIs, charts, and styled visuals.').then(()=>{this.textContent='Copied!';this.classList.add('ok');setTimeout(()=>{this.textContent='Copy Prompt';this.classList.remove('ok')},2000)})">Copy Prompt</button>
-      </div>
-      <div class="dashboard-card-footer">
-        <div>
-          <div class="dashboard-tag">Dashboard &nbsp;·&nbsp; Defective Products</div>
-          <div class="dashboard-title">Defective Products Analysis</div>
+    </div>
+
+    <div class="examples-teaser-grid">
+
+      <a href="actual-examples.html" class="teaser-card">
+        <div class="teaser-thumb">
+          <iframe src="vendor-defect-network.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
         </div>
-        <a href="defective-products-dashboard.html" target="_blank" class="btn-open" style="color:#ff4d4d;border-color:#ff4d4d;">Open Dashboard</a>
-      </div>
+        <div class="teaser-foot">
+          <div class="teaser-type">HTML</div>
+          <div class="teaser-name">Vendor Defect Network</div>
+        </div>
+      </a>
+
+      <a href="actual-examples.html" class="teaser-card">
+        <div class="teaser-thumb">
+          <iframe src="defects-dashboard.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+        </div>
+        <div class="teaser-foot">
+          <div class="teaser-type">HTML</div>
+          <div class="teaser-name">Defects Dashboard</div>
+        </div>
+      </a>
+
+      <a href="actual-examples.html" class="teaser-card">
+        <div class="teaser-thumb">
+          <iframe src="defective-products-dashboard.html" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+        </div>
+        <div class="teaser-foot">
+          <div class="teaser-type">HTML</div>
+          <div class="teaser-name">Defective Products Dashboard</div>
+        </div>
+      </a>
+
+      <a href="actual-examples.html" class="teaser-card">
+        <div class="teaser-thumb is-pdf">
+          <iframe src="Board%20Pack%20PowerPoint.pdf#toolbar=0&navpanes=0&view=FitH" tabindex="-1" aria-hidden="true"></iframe>
+        </div>
+        <div class="teaser-foot">
+          <div class="teaser-type">PowerPoint</div>
+          <div class="teaser-name">Board Pack</div>
+        </div>
+      </a>
+
     </div>
+
+    <a href="actual-examples.html" class="examples-cta">Explore All Examples</a>
   </section>
 
   <!-- DOCUMENTATION -->
@@ -763,11 +905,15 @@ footer {
     <div class="doc-grid">
 
       <div class="pdf-card">
-        <iframe
-          class="pdf-preview"
-          src="Qlik%20MCP%20Capabilities%20V1.pdf#toolbar=0&navpanes=0&view=FitH"
-          title="Qlik MCP Capabilities V1">
-        </iframe>
+        <div class="pdf-preview-wrap" onclick="window.open('Qlik%20MCP%20Capabilities%20V1.pdf','_blank')">
+          <div class="pdf-overlay"></div>
+          <iframe
+            class="pdf-preview"
+            src="Qlik%20MCP%20Capabilities%20V1.pdf#toolbar=0&navpanes=0&view=FitH"
+            title="Qlik MCP Capabilities V1"
+            tabindex="-1">
+          </iframe>
+        </div>
         <div class="pdf-info">
           <div class="pdf-meta">
             <div class="pdf-tag">PDF &nbsp;·&nbsp; Capabilities</div>

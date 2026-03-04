@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendor — Defective Products Network</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+:root {
+  --bg: #080c14; --surface: #0d1424; --border: #1a2540;
+  --vendor: #00d4aa; --product: #ff6b35;
+  --high: #ff2d55; --med: #ffcc00; --low: #00d4aa;
+  --text: #e2eaf8; --muted: #4a6080;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  font-family: 'Space Mono', monospace;
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh; width: 100vw;
+}
+
+body::before {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 20%, rgba(0,212,170,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 85% 70%, rgba(255,107,53,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 50% 50%, rgba(255,45,85,0.03) 0%, transparent 70%);
+}
+
+#header {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  padding:14px 24px;
+  background:linear-gradient(to bottom, rgba(8,12,20,0.98), transparent);
+  display:flex; align-items:center; gap:20px;
+}
+.htitle {
+  font-family:'Syne',sans-serif; font-size:18px; font-weight:800;
+  background:linear-gradient(90deg,#00d4aa,#7fffdf);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.hsub { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
+
+#legend {
+  position:fixed; top:70px; left:20px; z-index:100;
+  background:rgba(13,20,36,0.92); border:1px solid var(--border);
+  border-radius:10px; padding:14px 16px; backdrop-filter:blur(10px);
+  min-width:185px;
+}
+.ltitle { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.lrow { display:flex; align-items:center; gap:10px; margin-bottom:7px; font-size:11px; }
+.ldot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+.lsep { border:none; border-top:1px solid var(--border); margin:9px 0; }
+
+#statsbox {
+  position:fixed; top:70px; right:20px; z-index:100;
+  background:rgba(13,20,36,0.92); border:1px solid var(--border);
+  border-radius:10px; padding:14px 16px; backdrop-filter:blur(10px);
+  min-width:195px;
+}
+.srow { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px; gap:12px; }
+.slabel { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+.sval { font-family:'Syne',sans-serif; font-size:19px; font-weight:700; }
+
+#tooltip {
+  position:fixed; z-index:200;
+  background:rgba(13,20,36,0.97); border:1px solid var(--border);
+  border-radius:10px; padding:14px 18px; backdrop-filter:blur(20px);
+  pointer-events:none; opacity:0; transition:opacity 0.15s;
+  max-width:255px; box-shadow:0 8px 40px rgba(0,0,0,0.6);
+}
+.tttype { font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:5px; }
+.ttname { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; margin-bottom:9px; line-height:1.3; }
+.ttrow { display:flex; justify-content:space-between; gap:14px; margin-bottom:4px; font-size:11px; }
+.ttkey { color:var(--muted); } .ttval { font-weight:700; }
+.ttbarbg { height:4px; background:var(--border); border-radius:2px; margin-top:9px; overflow:hidden; }
+.ttbar { height:100%; border-radius:2px; transition:width 0.3s; }
+
+#controls {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  z-index:100; display:flex; gap:8px;
+  background:rgba(13,20,36,0.92); border:1px solid var(--border);
+  border-radius:40px; padding:7px 12px; backdrop-filter:blur(10px);
+}
+.cbtn {
+  background:none; border:1px solid var(--border); color:var(--muted);
+  font-family:'Space Mono',monospace; font-size:10px;
+  padding:6px 13px; border-radius:20px; cursor:pointer;
+  transition:all 0.2s; letter-spacing:1px; text-transform:uppercase;
+}
+.cbtn:hover, .cbtn.active { border-color:#00d4aa; color:#00d4aa; background:rgba(0,212,170,0.08); }
+
+svg { position:relative; z-index:10; }
+
+.link { stroke-opacity:0.45; transition:stroke-opacity 0.2s, stroke-width 0.2s; }
+.link.dimmed { stroke-opacity:0.04 !important; }
+.link.lit { stroke-opacity:0.9 !important; }
+
+.ng { cursor:pointer; transition:opacity 0.2s; }
+.ng.dimmed { opacity:0.1; }
+
+@keyframes pulse { 0%,100%{r:0;opacity:.5} 50%{opacity:.3} to{r:26px;opacity:0} }
+.pring { animation:pulse 2.2s ease-out infinite; }
+
+@keyframes fadein { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
+.ng { animation:fadein 0.5s ease-out both; }
+.home-btn{position:fixed;bottom:28px;right:28px;z-index:9999;display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#00d4aa;border:1px solid #00d4aa;padding:9px 18px;border-radius:3px;background:rgba(8,12,20,.92);backdrop-filter:blur(10px);box-shadow:0 4px 20px rgba(0,0,0,.5);transition:background .2s,color .2s;}
+.home-btn:hover{background:#00d4aa;color:#080c14;}
+.home-btn svg{width:14px;height:14px;flex-shrink:0;}
+</style>
+</head>
+<body>
+<a href="index.html" class="home-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Home
+</a>
+
+<div id="header">
+  <div>
+    <div class="htitle">Vendor — Defective Products Network</div>
+    <div class="hsub">SAP Procurement · Global Holding Co. · 2016–2020 · Click any node to explore</div>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="ltitle">Nodes</div>
+  <div class="lrow"><div class="ldot" style="background:#00d4aa;box-shadow:0 0 7px #00d4aa88"></div>Vendor</div>
+  <div class="lrow"><div class="ldot" style="background:#ff6b35;box-shadow:0 0 7px #ff6b3588"></div>Defective Product</div>
+  <hr class="lsep">
+  <div class="ltitle">Defect Rate</div>
+  <div class="lrow"><div class="ldot" style="background:#ff2d55"></div>High (&gt;0.15%)</div>
+  <div class="lrow"><div class="ldot" style="background:#ffcc00"></div>Medium (0.10–0.15%)</div>
+  <div class="lrow"><div class="ldot" style="background:#00d4aa"></div>Low (&lt;0.10%)</div>
+  <hr class="lsep">
+  <div class="ltitle">Link Width</div>
+  <div class="lrow" style="font-size:10px;color:#7a90b0">Thicker = more defects</div>
+  <div class="lrow" style="font-size:10px;color:#7a90b0">Red link = high-risk connection</div>
+</div>
+
+<div id="statsbox">
+  <div class="ltitle">Network</div>
+  <div class="srow"><span class="slabel">Vendors</span><span class="sval" style="color:#00d4aa">8</span></div>
+  <div class="srow"><span class="slabel">Products</span><span class="sval" style="color:#ff6b35">28</span></div>
+  <div class="srow"><span class="slabel">Links</span><span class="sval" style="color:#b0c4e0">28</span></div>
+  <div class="srow"><span class="slabel">High Risk</span><span class="sval" style="color:#ff2d55">6</span></div>
+</div>
+
+<div id="tooltip">
+  <div class="tttype" id="tt-type"></div>
+  <div class="ttname" id="tt-name"></div>
+  <div id="tt-body"></div>
+  <div class="ttbarbg"><div class="ttbar" id="tt-bar"></div></div>
+</div>
+
+<div id="controls">
+  <button class="cbtn active" id="btn-all"       onclick="setMode('all',this)">All Nodes</button>
+  <button class="cbtn"        id="btn-highrisk"  onclick="setMode('highrisk',this)">High Risk</button>
+  <button class="cbtn"        id="btn-mara"      onclick="setMode('mara',this)">Mara S.A.</button>
+  <button class="cbtn"        id="btn-reset"     onclick="resetView()">Reset View</button>
+</div>
+
+<svg id="graph"></svg>
+
+<script>
+const vendors = [
+  {id:'V1',name:'Mara S.A.',         defects:657,rate:0.152},
+  {id:'V2',name:'ROBERTS NV',        defects:652,rate:0.114},
+  {id:'V3',name:'Surge LTD',         defects:552,rate:0.124},
+  {id:'V4',name:'BAR SPA',           defects:543,rate:0.178},
+  {id:'V5',name:'Emma Sonnett SE',   defects:515,rate:0.176},
+  {id:'V6',name:'BERGER SRL',        defects:508,rate:0.169},
+  {id:'V7',name:'River & Moon Cars', defects:487,rate:0.166},
+  {id:'V8',name:'Ralph CANDOR B.V.', defects:486,rate:0.174},
+].map(v=>({...v,type:'vendor'}));
+
+const products = [
+  {id:'P1', name:'METRO 01',             defects:50, rate:0.0500, vid:'V1'},
+  {id:'P2', name:'PC Maxitech 1.600',    defects:32, rate:0.0498, vid:'V1'},
+  {id:'P3', name:'Revolution counter',   defects:38, rate:0.0495, vid:'V1'},
+  {id:'P4', name:'Spark coil 3000',      defects:37, rate:0.0401, vid:'V1'},
+  {id:'P5', name:'Pump assembly',        defects:30, rate:0.0395, vid:'V1'},
+  {id:'P6', name:'Screw',                defects:95, rate:0.0133, vid:'V2'},
+  {id:'P7', name:'Flat gasket',          defects:88, rate:0.0108, vid:'V2'},
+  {id:'P8', name:'Hollow shaft',         defects:82, rate:0.0100, vid:'V2'},
+  {id:'P9', name:'Nut',                  defects:75, rate:0.0113, vid:'V2'},
+  {id:'P10',name:'Flatscreen MS 1460P',  defects:98, rate:0.0126, vid:'V3'},
+  {id:'P11',name:'Diskette Drive 3.5"',  defects:72, rate:0.0119, vid:'V3'},
+  {id:'P12',name:'Laser Printer 4S',     defects:65, rate:0.0124, vid:'V3'},
+  {id:'P13',name:'Pump (mat. supply)',   defects:78, rate:0.1694, vid:'V4'},
+  {id:'P14',name:'Casing unit',          defects:68, rate:0.0110, vid:'V4'},
+  {id:'P15',name:'Acetylsalicylic acid', defects:62, rate:0.0122, vid:'V4'},
+  {id:'P16',name:'Flatscreen 1775P',     defects:85, rate:0.1635, vid:'V5'},
+  {id:'P17',name:'Cetepharm-N tablet',   defects:90, rate:0.1417, vid:'V5'},
+  {id:'P18',name:'Light Bulb 60W',       defects:55, rate:0.1339, vid:'V5'},
+  {id:'P19',name:'Hexagon screw M10',    defects:72, rate:0.1441, vid:'V6'},
+  {id:'P20',name:'Slug spiral casing',   defects:95, rate:0.0113, vid:'V6'},
+  {id:'P21',name:'Polysorbate 80',       defects:60, rate:0.0211, vid:'V6'},
+  {id:'P22',name:'CrossFun 350 cm3',     defects:80, rate:0.0190, vid:'V7'},
+  {id:'P23',name:'Wheel bearing kit',    defects:65, rate:0.0165, vid:'V7'},
+  {id:'P24',name:'Brake pad set',        defects:55, rate:0.0142, vid:'V7'},
+  {id:'P25',name:'Coolant additive',     defects:70, rate:0.1740, vid:'V8'},
+  {id:'P26',name:'O-ring seal pack',     defects:58, rate:0.0156, vid:'V8'},
+  {id:'P27',name:'Valve spring',         defects:50, rate:0.0133, vid:'V8'},
+  {id:'P28',name:'Hydraulic fluid 5L',   defects:48, rate:0.0128, vid:'V8'},
+].map(p=>({...p,type:'product'}));
+
+const allNodes = [...vendors,...products];
+const links = products.map(p=>({source:p.vid,target:p.id,defects:p.defects,rate:p.rate}));
+
+function rColor(rate) {
+  if(rate>0.15) return '#ff2d55';
+  if(rate>0.10) return '#ffcc00';
+  return '#00d4aa';
+}
+function lColor(rate){ return rate>0.12?'#ff4466':rate>0.08?'#ff8833':'#1e3a5f'; }
+function lWidth(d){ return Math.max(1.2,Math.min(7,d/14)); }
+
+const W=window.innerWidth, H=window.innerHeight;
+const svg=d3.select('#graph').attr('width',W).attr('height',H);
+const g=svg.append('g');
+
+const zoom=d3.zoom().scaleExtent([0.25,5])
+  .on('zoom',e=>g.attr('transform',e.transform));
+svg.call(zoom);
+
+function resetView(){
+  svg.transition().duration(700)
+    .call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2).scale(0.82));
+}
+
+const sim=d3.forceSimulation(allNodes)
+  .force('link',d3.forceLink(links).id(d=>d.id)
+    .distance(d=>d.rate>0.12?100:145).strength(0.55))
+  .force('charge',d3.forceManyBody().strength(d=>d.type==='vendor'?-1000:-240))
+  .force('center',d3.forceCenter(0,0))
+  .force('collide',d3.forceCollide().radius(d=>d.type==='vendor'?52:28));
+
+// Links
+const linkG=g.append('g');
+const linkSel=linkG.selectAll('line').data(links).join('line')
+  .attr('class','link')
+  .attr('stroke',d=>lColor(d.rate))
+  .attr('stroke-width',d=>lWidth(d.defects));
+
+// Nodes
+const nodeG=g.append('g');
+const ng=nodeG.selectAll('g').data(allNodes).join('g')
+  .attr('class','ng')
+  .style('animation-delay',(d,i)=>i*20+'ms')
+  .call(d3.drag()
+    .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+    .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+    .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;})
+  )
+  .on('mouseenter',onTTShow)
+  .on('mousemove',onTTMove)
+  .on('mouseleave',onTTHide)
+  .on('click',onNodeClick);
+
+// Draw vendor circles
+ng.filter(d=>d.type==='vendor').each(function(d){
+  const el=d3.select(this);
+  const r=30+(d.defects-480)/38;
+  const c=rColor(d.rate);
+
+  // outer glow ring
+  el.append('circle').attr('r',r+16)
+    .attr('fill','none').attr('stroke',c)
+    .attr('stroke-width',1).attr('stroke-opacity',0.12);
+
+  // pulse for high-risk
+  if(d.rate>0.15){
+    el.append('circle').attr('class','pring')
+      .attr('r',0).attr('fill','none')
+      .attr('stroke','#ff2d55').attr('stroke-width',1.5);
+  }
+
+  // main circle
+  el.append('circle').attr('r',r)
+    .attr('fill','#0b111e').attr('stroke',c).attr('stroke-width',2.5);
+
+  // soft inner fill
+  el.append('circle').attr('r',r-3)
+    .attr('fill',c).attr('fill-opacity',0.10);
+
+  // vendor label
+  el.append('text')
+    .attr('font-family',"'Syne',sans-serif").attr('font-size',11)
+    .attr('font-weight','700').attr('fill','#e2eaf8')
+    .attr('text-anchor','middle').attr('dy','0.35em')
+    .text(d.name.length>14?d.name.slice(0,13)+'…':d.name);
+
+  // defect count
+  el.append('text')
+    .attr('font-family',"'Space Mono',monospace").attr('font-size',8.5)
+    .attr('fill',c).attr('text-anchor','middle').attr('dy',r+13)
+    .text(d.defects+' defects');
+});
+
+// Draw product circles
+ng.filter(d=>d.type==='product').each(function(d){
+  const el=d3.select(this);
+  const r=13+(d.defects/22);
+  const c=rColor(d.rate);
+
+  el.append('circle').attr('r',r+4)
+    .attr('fill',c).attr('fill-opacity',0.07)
+    .attr('stroke',c).attr('stroke-width',0.4).attr('stroke-opacity',0.25);
+
+  el.append('circle').attr('r',r)
+    .attr('fill','#0b111e').attr('stroke',c).attr('stroke-width',1.5);
+
+  el.append('circle').attr('r',r*0.38)
+    .attr('fill',c).attr('fill-opacity',0.45);
+
+  // label
+  const label=d.name.length>16?d.name.slice(0,15)+'…':d.name;
+  el.append('text')
+    .attr('font-family',"'Space Mono',monospace").attr('font-size',8.5)
+    .attr('fill','#6a80a0').attr('text-anchor','middle').attr('dy',r+12)
+    .text(label);
+});
+
+sim.on('tick',()=>{
+  linkSel
+    .attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+    .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+  ng.attr('transform',d=>`translate(${d.x},${d.y})`);
+});
+
+setTimeout(resetView,80);
+
+// ── Tooltip ──
+const tt=document.getElementById('tooltip');
+function onTTShow(ev,d){
+  const c=d.type==='vendor'?'#00d4aa':rColor(d.rate);
+  document.getElementById('tt-type').textContent=d.type==='vendor'?'VENDOR':'DEFECTIVE PRODUCT';
+  document.getElementById('tt-type').style.color=c;
+  document.getElementById('tt-name').textContent=d.name;
+  let body='';
+  if(d.type==='vendor'){
+    const risk=d.rate>0.15?'HIGH':d.rate>0.10?'MEDIUM':'LOW';
+    const prods=products.filter(p=>p.vid===d.id).length;
+    body=`<div class="ttrow"><span class="ttkey">Total Defects</span><span class="ttval" style="color:${c}">${d.defects.toLocaleString()}</span></div>
+          <div class="ttrow"><span class="ttkey">Avg Defect Rate</span><span class="ttval" style="color:${c}">${(d.rate*100).toFixed(3)}%</span></div>
+          <div class="ttrow"><span class="ttkey">Products Linked</span><span class="ttval">${prods}</span></div>
+          <div class="ttrow"><span class="ttkey">Risk Level</span><span class="ttval" style="color:${c}">${risk}</span></div>`;
+    document.getElementById('tt-bar').style.width=(d.defects/700*100)+'%';
+  } else {
+    const vname=vendors.find(v=>v.id===d.vid)?.name||'';
+    body=`<div class="ttrow"><span class="ttkey">Defects</span><span class="ttval" style="color:${c}">${d.defects}</span></div>
+          <div class="ttrow"><span class="ttkey">Defect Rate</span><span class="ttval" style="color:${c}">${(d.rate*100).toFixed(3)}%</span></div>
+          <div class="ttrow"><span class="ttkey">Supplier</span><span class="ttval">${vname}</span></div>`;
+    document.getElementById('tt-bar').style.width=Math.min(100,d.rate/0.05*100)+'%';
+  }
+  document.getElementById('tt-body').innerHTML=body;
+  document.getElementById('tt-bar').style.background=c;
+  tt.style.opacity='1';
+  onTTMove(ev);
+}
+function onTTMove(ev){
+  const x=ev.clientX+14,y=ev.clientY-10;
+  tt.style.left=(x+270>window.innerWidth?x-275:x)+'px';
+  tt.style.top=(y+190>window.innerHeight?y-175:y)+'px';
+}
+function onTTHide(){ tt.style.opacity='0'; }
+
+// ── Click highlight ──
+let sel=null;
+function onNodeClick(ev,d){
+  ev.stopPropagation();
+  if(sel===d.id){clearSel();return;}
+  sel=d.id;
+  const conn=new Set([d.id]);
+  links.forEach(l=>{
+    const s=typeof l.source==='object'?l.source.id:l.source;
+    const t=typeof l.target==='object'?l.target.id:l.target;
+    if(s===d.id)conn.add(t);
+    if(t===d.id)conn.add(s);
+  });
+  ng.classed('dimmed',n=>!conn.has(n.id));
+  linkSel.classed('dimmed',l=>{
+    const s=typeof l.source==='object'?l.source.id:l.source;
+    const t=typeof l.target==='object'?l.target.id:l.target;
+    return !conn.has(s)||!conn.has(t);
+  }).classed('lit',l=>{
+    const s=typeof l.source==='object'?l.source.id:l.source;
+    const t=typeof l.target==='object'?l.target.id:l.target;
+    return conn.has(s)&&conn.has(t);
+  });
+}
+svg.on('click',()=>clearSel());
+function clearSel(){
+  sel=null;
+  ng.classed('dimmed',false);
+  linkSel.classed('dimmed',false).classed('lit',false);
+}
+
+// ── Mode buttons ──
+function setMode(mode,btn){
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  clearSel();
+  if(mode==='all'){
+    ng.classed('dimmed',false);
+    linkSel.classed('dimmed',false);
+  } else if(mode==='highrisk'){
+    const hr=new Set();
+    allNodes.forEach(n=>{if(n.rate>0.14)hr.add(n.id);});
+    links.forEach(l=>{
+      const s=typeof l.source==='object'?l.source.id:l.source;
+      const t=typeof l.target==='object'?l.target.id:l.target;
+      if(hr.has(s)||hr.has(t)){hr.add(s);hr.add(t);}
+    });
+    ng.classed('dimmed',n=>!hr.has(n.id));
+    linkSel.classed('dimmed',l=>{
+      const s=typeof l.source==='object'?l.source.id:l.source;
+      const t=typeof l.target==='object'?l.target.id:l.target;
+      return !hr.has(s)||!hr.has(t);
+    });
+  } else if(mode==='mara'){
+    const m=new Set(['V1']);
+    links.forEach(l=>{
+      const s=typeof l.source==='object'?l.source.id:l.source;
+      const t=typeof l.target==='object'?l.target.id:l.target;
+      if(s==='V1')m.add(t);
+    });
+    ng.classed('dimmed',n=>!m.has(n.id));
+    linkSel.classed('dimmed',l=>{
+      const s=typeof l.source==='object'?l.source.id:l.source;
+      const t=typeof l.target==='object'?l.target.id:l.target;
+      return !m.has(s)||!m.has(t);
+    });
+  }
+}
+</script>
+</body>
+</html>
