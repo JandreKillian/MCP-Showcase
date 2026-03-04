@@ -147,6 +147,19 @@ body::before {
   color: #fff;
 }
 .nav-pills a.youtube svg { width: 14px; height: 14px; flex-shrink: 0; }
+.nav-pills a.meetup {
+  color: #FF4A79;
+  border-color: #FF4A79;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.nav-pills a.meetup:hover {
+  background: #FF4A79;
+  border-color: #FF4A79;
+  color: #fff;
+}
+.nav-pills a.meetup svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 /* ── MAIN ── */
 main {
@@ -441,6 +454,23 @@ main {
 }
 .footer-youtube:hover { background: #FF0000; color: #fff; }
 .footer-youtube svg { width: 14px; height: 14px; flex-shrink: 0; }
+.footer-meetup {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #FF4A79;
+  border: 1px solid #FF4A79;
+  padding: 6px 14px;
+  border-radius: 2px;
+  transition: background .2s, color .2s;
+}
+.footer-meetup:hover { background: #FF4A79; color: #fff; }
+.footer-meetup svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 footer {
   position: relative;
@@ -500,6 +530,10 @@ footer {
     <a href="https://www.youtube.com/@qeepitsimplequpid" target="_blank" rel="noopener noreferrer" class="youtube">
       <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
       YouTube
+    </a>
+    <a href="https://www.meetup.com/qlik-meetup-johannesburg/" target="_blank" rel="noopener noreferrer" class="meetup">
+      <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M19.24 12.99c-.44.6-1.08 1.02-1.79 1.17l-.47.09c-.45.09-.74.52-.66.97l.09.49c.17.95.01 1.93-.46 2.77-.47.84-1.23 1.49-2.14 1.84-.91.35-1.92.36-2.84.03-.92-.33-1.7-.97-2.19-1.82-.5-.84-.68-1.82-.53-2.77l.09-.49c.09-.45-.2-.88-.65-.97l-.47-.09c-.71-.14-1.35-.56-1.78-1.17-.44-.6-.63-1.35-.52-2.09.11-.74.49-1.41 1.07-1.87.58-.47 1.31-.7 2.06-.65l.48.04c.45.04.85-.3.89-.76l.04-.48c.07-.74.41-1.43.96-1.93.55-.5 1.27-.78 2.02-.78.75 0 1.47.28 2.02.78.55.5.89 1.19.96 1.93l.04.48c.04.45.44.79.89.76l.48-.04c.75-.06 1.49.18 2.06.65.58.47.96 1.13 1.07 1.87.11.74-.08 1.49-.52 2.09z"/></svg>
+      Meetup
     </a>
   </nav>
 </header>
@@ -636,6 +670,10 @@ footer {
   <a href="https://www.youtube.com/@qeepitsimplequpid" target="_blank" rel="noopener noreferrer" class="footer-youtube">
     <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
     YouTube
+  </a>
+  <a href="https://www.meetup.com/qlik-meetup-johannesburg/" target="_blank" rel="noopener noreferrer" class="footer-meetup">
+    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M19.24 12.99c-.44.6-1.08 1.02-1.79 1.17l-.47.09c-.45.09-.74.52-.66.97l.09.49c.17.95.01 1.93-.46 2.77-.47.84-1.23 1.49-2.14 1.84-.91.35-1.92.36-2.84.03-.92-.33-1.7-.97-2.19-1.82-.5-.84-.68-1.82-.53-2.77l.09-.49c.09-.45-.2-.88-.65-.97l-.47-.09c-.71-.14-1.35-.56-1.78-1.17-.44-.6-.63-1.35-.52-2.09.11-.74.49-1.41 1.07-1.87.58-.47 1.31-.7 2.06-.65l.48.04c.45.04.85-.3.89-.76l.04-.48c.07-.74.41-1.43.96-1.93.55-.5 1.27-.78 2.02-.78.75 0 1.47.28 2.02.78.55.5.89 1.19.96 1.93l.04.48c.04.45.44.79.89.76l.48-.04c.75-.06 1.49.18 2.06.65.58.47.96 1.13 1.07 1.87.11.74-.08 1.49-.52 2.09z"/></svg>
+    Meetup
   </a>
 </footer>
 
