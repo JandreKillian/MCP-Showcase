@@ -353,9 +353,16 @@ body::before {
   .masthead { padding: 20px 24px; }
   .intro-strip { padding: 14px 24px; flex-wrap: wrap; }
 }
+.home-btn{position:fixed;bottom:28px;right:28px;z-index:9999;display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:var(--qgreen);border:1.5px solid var(--qgreen);padding:9px 18px;border-radius:3px;background:rgba(245,240,232,.95);backdrop-filter:blur(10px);box-shadow:0 4px 20px rgba(0,0,0,.15);transition:background .2s,color .2s,box-shadow .2s;}
+.home-btn:hover{background:var(--qgreen);color:#fff;box-shadow:0 4px 24px rgba(0,92,53,.3);}
+.home-btn svg{width:14px;height:14px;flex-shrink:0;}
 </style>
 </head>
 <body>
+<a href="index.html" class="home-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Home
+</a>
 
 <!-- MASTHEAD -->
 <div class="masthead">

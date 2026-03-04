@@ -77,9 +77,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .fb{color:var(--html);font-weight:500;letter-spacing:1px;}
 @media(max-width:1100px){.card-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:720px){#header,#main{padding-left:20px;padding-right:20px;}.card-grid,.card-grid.two{grid-template-columns:1fr;}.hero-card{grid-template-columns:1fr;}.hc-col+.hc-col{border-left:none;border-top:1px solid var(--rim);}}
+.home-btn{position:fixed;bottom:28px;right:28px;z-index:9999;display:inline-flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:var(--html);border:1px solid var(--html);padding:9px 18px;border-radius:3px;background:rgba(6,8,16,.92);backdrop-filter:blur(10px);box-shadow:0 4px 20px rgba(0,0,0,.4);transition:background .2s,color .2s,box-shadow .2s;}
+.home-btn:hover{background:var(--html);color:#fff;box-shadow:0 4px 24px rgba(232,86,42,.35);}
+.home-btn svg{width:14px;height:14px;flex-shrink:0;}
 </style>
 </head>
 <body>
+<a href="index.html" class="home-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Home
+</a>
 <div id="header">
   <div class="header-inner">
     <div>
