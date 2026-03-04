@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defective Products Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent: #ff4d4d;
+    --accent2: #ff8c42;
+    --accent3: #ffd166;
+    --accent4: #06d6a0;
+    --text: #e8ecf4;
+    --text-muted: #6b7590;
+    --text-dim: #3a4160;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    letter-spacing: 3px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-left p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 6px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  .badge.live {
+    border-color: var(--accent4);
+    color: var(--accent4);
+    position: relative;
+  }
+  .badge.live::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent4);
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* KPI Row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .kpi-card:nth-child(1)::after { background: var(--accent); }
+  .kpi-card:nth-child(2)::after { background: var(--accent2); }
+  .kpi-card:nth-child(3)::after { background: var(--accent3); }
+  .kpi-card:nth-child(4)::after { background: var(--accent4); }
+
+  .kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 12px;
+  }
+
+  .kpi-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .kpi-card:nth-child(1) .kpi-value { color: var(--accent); }
+  .kpi-card:nth-child(2) .kpi-value { color: var(--accent2); }
+  .kpi-card:nth-child(3) .kpi-value { color: var(--accent3); }
+  .kpi-card:nth-child(4) .kpi-value { color: var(--accent4); }
+
+  .kpi-sub {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .kpi-delta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .kpi-delta.down { background: rgba(6,214,160,0.15); color: var(--accent4); }
+  .kpi-delta.up { background: rgba(255,77,77,0.15); color: var(--accent); }
+
+  /* Grid */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  .card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* Line Chart */
+  .line-chart-wrap {
+    position: relative;
+    height: 200px;
+  }
+
+  svg.chart { width: 100%; height: 100%; overflow: visible; }
+
+  /* Bar Chart horizontal */
+  .bar-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .bar-item { display: flex; flex-direction: column; gap: 4px; }
+
+  .bar-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .bar-name { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+  .bar-val { font-family: 'DM Mono', monospace; color: var(--text-muted); font-size: 11px; }
+
+  .bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Donut */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legend-name { color: var(--text); flex: 1; }
+  .legend-pct { font-family: 'DM Mono', monospace; color: var(--text-muted); font-size: 11px; }
+
+  /* Scatter / bubble */
+  .bubble-chart { position: relative; height: 220px; }
+
+  /* Table */
+  .mini-table { width: 100%; border-collapse: collapse; }
+  .mini-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mini-table th:last-child { text-align: right; }
+  .mini-table td {
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(30,35,48,0.5);
+    font-size: 12px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .mini-table td:last-child { text-align: right; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .mini-table tr:last-child td { border-bottom: none; }
+
+  .rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--text-dim);
+    margin-right: 10px;
+  }
+
+  .heat-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Year filter tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  .tab {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  /* ── PROMPT BANNER ── */
+  .prompt-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .prompt-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .prompt-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #b8d4f8;
+    flex: 1;
+    line-height: 1.5;
+    min-width: 200px;
+  }
+  .prompt-copy {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    background: none;
+    padding: 7px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all .15s;
+  }
+  .prompt-copy:hover { background: var(--accent); color: #fff; }
+  .prompt-copy.ok { border-color: var(--accent4); color: var(--accent4); }
+
+  /* ── HOME BUTTON ── */
+  .home-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 9999;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 9px 18px;
+    border-radius: 3px;
+    background: rgba(10,12,16,.92);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0,0,0,.5);
+    transition: background .2s, color .2s;
+  }
+  .home-btn:hover { background: var(--accent); color: #fff; }
+  .home-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="home-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Home
+</a>
+
+<div class="wrapper">
+
+  <div class="prompt-banner">
+    <span class="prompt-label">Prompt Used</span>
+    <span class="prompt-text">Fetch the defective products data from my Qlik app and build a standalone HTML dashboard with KPIs, charts, and styled visuals.</span>
+    <button class="prompt-copy" onclick="navigator.clipboard.writeText('Fetch the defective products data from my Qlik app and build a standalone HTML dashboard with KPIs, charts, and styled visuals.').then(()=>{this.textContent='Copied!';this.classList.add('ok');setTimeout(()=>{this.textContent='Copy Prompt';this.classList.remove('ok')},2000})">Copy Prompt</button>
+  </div>
+
+  <header>
+    <div class="header-left">
+      <h1>Defective Products</h1>
+      <p>SAP Procurement · Quality Intelligence Dashboard</p>
+    </div>
+    <div class="header-right">
+      <span class="badge">2016 — 2020</span>
+      <span class="badge">1,766 Vendors</span>
+      <span class="badge live">SAP BW Connected</span>
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Defects (All Time)</div>
+      <div class="kpi-value">293,630</div>
+      <div class="kpi-sub">
+        <span class="kpi-delta down">▼ 60% YoY</span>
+        <span>2019→2020</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Cost of Defects</div>
+      <div class="kpi-value">$146.7M</div>
+      <div class="kpi-sub">
+        <span class="kpi-delta down">▼ 59.7%</span>
+        <span>CY vs PY</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Incidents</div>
+      <div class="kpi-value">19,203</div>
+      <div class="kpi-sub">
+        <span class="kpi-delta down">▼ 59.4%</span>
+        <span>CY vs PY</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Peak Year</div>
+      <div class="kpi-value">2017</div>
+      <div class="kpi-sub">
+        <span class="kpi-delta up">82,107</span>
+        <span>defect units</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trend + Company Donut -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Defects Trend by Year</div>
+      <div class="line-chart-wrap">
+        <svg class="chart" id="lineChart" viewBox="0 0 700 200" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Defects by Company</div>
+      <div class="donut-wrap">
+        <svg id="donutChart" viewBox="0 0 120 120" width="120" height="120" style="flex-shrink:0;"></svg>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor + Material bars -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Top 10 Vendors by Defects</div>
+      <div class="bar-list" id="vendorBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top 10 Materials by Defects</div>
+      <div class="bar-list" id="materialBars"></div>
+    </div>
+  </div>
+
+  <!-- Vendor detail table + cost scatter -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Vendor Quality Scorecard</div>
+      <table class="mini-table" id="vendorTable"></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Cost of Defects · Company Breakdown</div>
+      <div class="bar-list" id="companyBars"></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>SOURCE: SAP BW · PROCUREMENT MODULE</span>
+    <span>GENERATED VIA QLIK MCP · CLAUDE</span>
+  </footer>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const yearData = [
+  { year: '2016', defects: 49066, cost: 24570820, incidents: 3164 },
+  { year: '2017', defects: 82107, cost: 41082009, incidents: 5383 },
+  { year: '2018', defects: 80267, cost: 40066650, incidents: 5289 },
+  { year: '2019', defects: 58621, cost: 29249371, incidents: 3816 },
+  { year: '2020', defects: 23569, cost: 11779079, incidents: 1551 },
+];
+
+const vendorData = [
+  { name: 'Mara S.A.',          defects: 657, cost: 321226, incidents: 40 },
+  { name: 'ROBERTS NV',         defects: 652, cost: 322433, incidents: 46 },
+  { name: 'Surge LTD',          defects: 552, cost: 281967, incidents: 33 },
+  { name: 'BAR SPA',            defects: 543, cost: 276035, incidents: 27 },
+  { name: 'Emma Sonnett SE',    defects: 515, cost: 251375, incidents: 27 },
+  { name: 'BERGER SRL',         defects: 508, cost: 261754, incidents: 30 },
+  { name: 'River & Moon Cars',  defects: 487, cost: 246997, incidents: 34 },
+  { name: 'Ralph CANDOR B.V.',  defects: 486, cost: 244446, incidents: 31 },
+  { name: 'BORAK & MALAN',      defects: 472, cost: 229288, incidents: 30 },
+  { name: 'SESTAK AG',          defects: 456, cost: 230138, incidents: 23 },
+];
+
+const materialData = [
+  { name: 'Screw',               defects: 2808, cost: 1409746 },
+  { name: 'Slug for spiral cas.',defects: 2552, cost: 1281071 },
+  { name: 'Flatscreen MS 1460P', defects: 2545, cost: 1270670 },
+  { name: 'Hollow shaft',        defects: 2477, cost: 1240535 },
+  { name: 'Nut',                 defects: 2466, cost: 1229479 },
+  { name: 'Cetepharm-N tablet',  defects: 2365, cost: 1172882 },
+  { name: 'Casing',              defects: 2090, cost: 1054711 },
+  { name: 'Acetysalicylic acid', defects: 2069, cost: 1041568 },
+  { name: 'Diskette Drive 3.5"', defects: 1818, cost:  909258 },
+  { name: 'Flat gasket',         defects: 1797, cost:  890487 },
+];
+
+const companyData = [
+  { name: 'IDES US INC',     defects: 127607, cost: 63654283 },
+  { name: 'IDES AG',         defects: 105961, cost: 53035454 },
+  { name: 'IDES Canada',     defects:  38162, cost: 19100431 },
+  { name: 'IDES UK',         defects:  20978, cost: 10499365 },
+  { name: 'IDES AG NEW GL',  defects:    260, cost:   125038 },
+  { name: 'IDES México',     defects:    220, cost:   105639 },
+];
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const fmt  = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : n;
+const fmtD = n => n >= 1e6 ? '$'+(n/1e6).toFixed(1)+'M' : '$'+(n/1e3).toFixed(0)+'K';
+
+const PALETTE = ['#ff4d4d','#ff8c42','#ffd166','#06d6a0','#118ab2','#9b5de5','#f15bb5','#00bbf9'];
+
+// ── LINE CHART ─────────────────────────────────────────────────────────────
+function drawLineChart() {
+  const svg = document.getElementById('lineChart');
+  const W = 700, H = 200;
+  const pad = { t: 20, r: 20, b: 36, l: 50 };
+  const iW = W - pad.l - pad.r;
+  const iH = H - pad.t - pad.b;
+
+  const vals = yearData.map(d => d.defects);
+  const maxV = Math.max(...vals);
+  const minV = 0;
+
+  const xs = yearData.map((_, i) => pad.l + (i / (yearData.length - 1)) * iW);
+  const ys = vals.map(v => pad.t + iH - ((v - minV) / (maxV - minV)) * iH);
+
+  // Area fill
+  const areaD = `M${xs[0]},${pad.t + iH} ` +
+    xs.map((x, i) => `L${x},${ys[i]}`).join(' ') +
+    ` L${xs[xs.length-1]},${pad.t + iH} Z`;
+
+  // Line
+  const lineD = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ');
+
+  // Defs gradient
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ff4d4d" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#ff4d4d" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <!-- Grid lines -->
+    ${[0.25, 0.5, 0.75, 1].map(f => {
+      const y = pad.t + iH - f * iH;
+      return `<line x1="${pad.l}" y1="${y}" x2="${pad.l + iW}" y2="${y}" stroke="#1e2330" stroke-width="1"/>
+              <text x="${pad.l - 6}" y="${y + 4}" text-anchor="end" fill="#3a4160" font-family="'DM Mono',monospace" font-size="9">${fmt(Math.round(maxV * f))}</text>`;
+    }).join('')}
+    <!-- Area -->
+    <path d="${areaD}" fill="url(#areaGrad)"/>
+    <!-- Line -->
+    <path d="${lineD}" fill="none" stroke="#ff4d4d" stroke-width="2" stroke-linejoin="round"/>
+    <!-- Cost line -->
+    ${(() => {
+      const costVals = yearData.map(d => d.cost);
+      const maxC = Math.max(...costVals);
+      const costYs = costVals.map(v => pad.t + iH - (v / maxC) * iH);
+      const costLine = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${costYs[i]}`).join(' ');
+      return `<path d="${costLine}" fill="none" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="4,3" stroke-linejoin="round" opacity="0.7"/>`;
+    })()}
+    <!-- Dots + Labels -->
+    ${xs.map((x, i) => `
+      <circle cx="${x}" cy="${ys[i]}" r="4" fill="#0a0c10" stroke="#ff4d4d" stroke-width="2"/>
+      <text x="${x}" y="${pad.t + iH + 16}" text-anchor="middle" fill="#6b7590" font-family="'DM Mono',monospace" font-size="10">${yearData[i].year}</text>
+      <text x="${x}" y="${ys[i] - 10}" text-anchor="middle" fill="#e8ecf4" font-family="'DM Sans',sans-serif" font-size="10" font-weight="500">${fmt(yearData[i].defects)}</text>
+    `).join('')}
+    <!-- Legend -->
+    <rect x="${pad.l}" y="4" width="10" height="2" fill="#ff4d4d" rx="1"/>
+    <text x="${pad.l + 14}" y="8" fill="#6b7590" font-family="'DM Mono',monospace" font-size="9">DEFECTS</text>
+    <line x1="${pad.l + 80}" y1="4" x2="${pad.l + 90}" y2="4" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="${pad.l + 94}" y="8" fill="#6b7590" font-family="'DM Mono',monospace" font-size="9">COST</text>
+  `;
+}
+
+// ── DONUT ──────────────────────────────────────────────────────────────────
+function drawDonut() {
+  const data = companyData.slice(0, 5);
+  const total = data.reduce((s, d) => s + d.defects, 0);
+  const cx = 60, cy = 60, r = 45, inner = 28;
+  let angle = -Math.PI / 2;
+  const colors = PALETTE;
+
+  let paths = '';
+  data.forEach((d, i) => {
+    const slice = (d.defects / (companyData.reduce((s,c)=>s+c.defects,0))) * Math.PI * 2;
+    const x1 = cx + r * Math.cos(angle);
+    const y1 = cy + r * Math.sin(angle);
+    const x2 = cx + r * Math.cos(angle + slice);
+    const y2 = cy + r * Math.sin(angle + slice);
+    const xi1 = cx + inner * Math.cos(angle);
+    const yi1 = cy + inner * Math.sin(angle);
+    const xi2 = cx + inner * Math.cos(angle + slice);
+    const yi2 = cy + inner * Math.sin(angle + slice);
+    const large = slice > Math.PI ? 1 : 0;
+    paths += `<path d="M${xi1},${yi1} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} L${xi2},${yi2} A${inner},${inner} 0 ${large},0 ${xi1},${yi1} Z" fill="${colors[i]}" opacity="0.9"/>`;
+    angle += slice;
+  });
+
+  document.getElementById('donutChart').innerHTML = paths +
+    `<text x="${cx}" y="${cy - 4}" text-anchor="middle" fill="#e8ecf4" font-family="'Bebas Neue',sans-serif" font-size="14">293K</text>
+     <text x="${cx}" y="${cy + 10}" text-anchor="middle" fill="#6b7590" font-family="'DM Mono',monospace" font-size="7">DEFECTS</text>`;
+
+  const legend = document.getElementById('donutLegend');
+  const allTotal = companyData.reduce((s,d)=>s+d.defects,0);
+  data.forEach((d, i) => {
+    legend.innerHTML += `<div class="legend-item">
+      <div class="legend-dot" style="background:${colors[i]}"></div>
+      <span class="legend-name" style="font-size:11px">${d.name}</span>
+      <span class="legend-pct">${Math.round(d.defects/allTotal*100)}%</span>
+    </div>`;
+  });
+}
+
+// ── BAR LISTS ──────────────────────────────────────────────────────────────
+function renderBars(containerId, data, valueKey, colorStart, colorEnd) {
+  const el = document.getElementById(containerId);
+  const max = Math.max(...data.map(d => d[valueKey]));
+  const colors = [
+    '#ff4d4d','#ff5e5e','#ff7070','#ff8c42','#ffa060',
+    '#ffb880','#ffd166','#ffe08a','#06d6a0','#33ddb0'
+  ];
+  el.innerHTML = data.map((d, i) => `
+    <div class="bar-item">
+      <div class="bar-meta">
+        <span class="bar-name">${d.name}</span>
+        <span class="bar-val">${fmt(d[valueKey])}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:0%;background:${colors[i]}" data-width="${(d[valueKey]/max*100).toFixed(1)}%"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Animate bars in
+  setTimeout(() => {
+    el.querySelectorAll('.bar-fill').forEach(b => {
+      b.style.width = b.dataset.width;
+    });
+  }, 100);
+}
+
+// ── VENDOR TABLE ───────────────────────────────────────────────────────────
+function renderVendorTable() {
+  const el = document.getElementById('vendorTable');
+  const maxD = Math.max(...vendorData.map(d => d.defects));
+  el.innerHTML = `<thead><tr>
+    <th>#</th><th>Vendor</th><th>Defects</th><th>Incidents</th><th>Cost</th>
+  </tr></thead><tbody>` +
+  vendorData.map((d, i) => {
+    const heat = d.defects / maxD;
+    const hue = heat > 0.7 ? '#ff4d4d' : heat > 0.4 ? '#ff8c42' : '#ffd166';
+    return `<tr>
+      <td><span class="rank">${String(i+1).padStart(2,'0')}</span></td>
+      <td>${d.name}<span class="heat-dot" style="background:${hue};opacity:${0.4+heat*0.6}"></span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;color:${hue}">${d.defects.toLocaleString()}</span></td>
+      <td>${d.incidents}</td>
+      <td>${fmtD(d.cost)}</td>
+    </tr>`;
+  }).join('') + '</tbody>';
+}
+
+// ── COMPANY BARS ───────────────────────────────────────────────────────────
+function renderCompanyBars() {
+  const el = document.getElementById('companyBars');
+  const max = Math.max(...companyData.map(d => d.cost));
+  const colors = ['#ff4d4d','#ff8c42','#ffd166','#06d6a0','#9b5de5','#118ab2'];
+  el.innerHTML = companyData.map((d, i) => `
+    <div class="bar-item">
+      <div class="bar-meta">
+        <span class="bar-name">${d.name}</span>
+        <span class="bar-val">${fmtD(d.cost)}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:0%;background:${colors[i]}" data-width="${(d.cost/max*100).toFixed(1)}%"></div>
+      </div>
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    el.querySelectorAll('.bar-fill').forEach(b => b.style.width = b.dataset.width);
+  }, 100);
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+drawLineChart();
+drawDonut();
+renderBars('vendorBars', vendorData, 'defects');
+renderBars('materialBars', materialData, 'defects');
+renderVendorTable();
+renderCompanyBars();
+</script>
+</body>
+</html>
