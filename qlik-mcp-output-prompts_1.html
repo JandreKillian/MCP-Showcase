@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qlik MCP - External Output Prompts</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
+:root {
+  --void:#060810;--deep:#0b0e1a;--panel:#10151f;--raised:#151c2a;
+  --rim:#1e2a3d;--rim2:#28374f;
+  --html:#e8562a;--pptx:#c9380a;--docx:#1e6fd4;--xlsx:#1a7a45;
+  --multi:#d4a017;--text:#dde8f8;--soft:#8a9fbc;--ghost:#3a4f68;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 10% 0%,rgba(232,86,42,.07) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 60% at 90% 100%,rgba(30,111,212,.07) 0%,transparent 55%);}
+#header{position:relative;z-index:10;padding:0 52px;border-bottom:1px solid var(--rim);background:rgba(6,8,16,.96);}
+.header-inner{padding:32px 0 24px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:24px;border-bottom:1px solid var(--rim);margin-bottom:18px;}
+.h-kicker{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--html);display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.h-kicker::before{content:'';width:32px;height:1.5px;background:var(--html);}
+.h-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,6vw,68px);line-height:.92;letter-spacing:1px;}
+.h-title .a1{color:var(--html)}.h-title .a2{color:#4a9eff;}
+.h-desc{margin-top:14px;font-size:14px;color:var(--soft);line-height:1.65;max-width:560px;}
+.h-meta{text-align:right;font-family:'DM Mono',monospace;font-size:11px;}
+.h-meta .tag{display:inline-block;background:var(--html);color:#fff;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:2px;margin-bottom:8px;}
+.h-meta .line{color:var(--ghost);margin-bottom:4px;}.h-meta .line strong{color:var(--soft);}
+.format-tabs{display:flex;gap:0;flex-wrap:wrap;}
+.ftab{display:flex;align-items:center;gap:7px;padding:8px 18px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;border-right:1px solid var(--rim);cursor:pointer;transition:background .15s;user-select:none;}
+.ftab:first-child{border-left:1px solid var(--rim);}.ftab:hover{background:var(--panel);}.ftab.active{background:var(--raised);}
+.ftab .fdot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.ftab .fc{margin-left:4px;background:var(--rim);color:var(--ghost);font-size:8px;padding:1px 5px;border-radius:10px;}
+#main{position:relative;z-index:5;padding:0 52px 60px;}
+.section-head{display:flex;align-items:center;gap:16px;padding:40px 0 20px;}
+.sh-icon{width:42px;height:42px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.sh-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;}
+.sh-sub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ghost);margin-top:2px;}
+.section-head hr{flex:1;border:none;border-top:1px solid var(--rim);}
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rim);border:1px solid var(--rim);border-radius:8px;overflow:hidden;margin-bottom:1px;}
+.card-grid.two{grid-template-columns:repeat(2,1fr);}
+.pcard{background:var(--panel);padding:26px 24px 22px;position:relative;transition:background .15s;display:flex;flex-direction:column;gap:12px;}
+.pcard:hover{background:var(--raised);}
+.pcard-badge{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;padding:4px 9px;border-radius:3px;align-self:flex-start;}
+.pcard-num{position:absolute;top:16px;right:18px;font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:var(--rim);pointer-events:none;}
+.pcard-title{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:.5px;line-height:1.1;max-width:85%;}
+.pcard-prompt{background:var(--deep);border:1px solid var(--rim);border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;line-height:1.7;padding:14px 15px;color:#b8d4f8;white-space:pre-wrap;word-break:break-word;flex:1;}
+.pcard-prompt .hl{color:#ffd166;}.pcard-prompt .out{color:#06d6a0;font-weight:500;}
+.pcard-prompt .op{color:#ff9f1c;}.pcard-prompt .var{color:#a8dadc;font-style:italic;}
+.pcard-produces{display:flex;flex-wrap:wrap;gap:5px;}
+.ptag{display:inline-flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;border:1px solid var(--rim);color:var(--ghost);background:var(--deep);}
+.pcard-tools{display:flex;flex-wrap:wrap;gap:4px;}
+.tchip{font-family:'DM Mono',monospace;font-size:7.5px;padding:2px 7px;border-radius:2px;border:1px solid var(--rim);color:var(--ghost);background:var(--void);}
+.pcard-why{font-size:11.5px;color:var(--soft);line-height:1.6;padding-top:10px;border-top:1px solid var(--rim);}
+.pcard-why strong{color:var(--text);font-weight:600;}
+.copy-btn{align-self:flex-end;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:6px 12px;border-radius:3px;border:1px solid var(--rim);background:none;color:var(--ghost);cursor:pointer;transition:all .15s;}
+.copy-btn:hover{border-color:var(--html);color:var(--html);}.copy-btn.ok{border-color:#06d6a0;color:#06d6a0;}
+.hero-card{background:var(--panel);border:1px solid var(--rim);border-top:3px solid var(--multi);border-radius:8px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1.2fr 1fr;}
+.hc-col{padding:32px 28px;}.hc-col+.hc-col{border-left:1px solid var(--rim);}
+.hc-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--multi);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hc-eyebrow::before{content:'★';}
+.hc-title{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--text);margin-bottom:12px;}
+.hc-title em{color:var(--multi);font-style:normal;}
+.hc-desc{font-size:12.5px;color:var(--soft);line-height:1.65;}
+.hc-prompt{background:var(--void);border:1px solid var(--rim);border-left:3px solid var(--multi);border-radius:0 4px 4px 0;font-family:'DM Mono',monospace;font-size:11px;line-height:1.75;padding:16px 18px;color:#b8d4f8;white-space:pre-wrap;word-break:break-word;}
+.hc-prompt .hl{color:#ffd166;}.hc-prompt .out{color:#06d6a0;}.hc-prompt .op{color:#ff9f1c;}.hc-prompt .var{color:#a8dadc;font-style:italic;}
+.ostack{display:flex;flex-direction:column;gap:8px;margin-top:16px;}
+.orow{display:flex;align-items:center;gap:10px;background:var(--deep);border:1px solid var(--rim);border-radius:4px;padding:10px 12px;}
+.oicon{font-size:16px;flex-shrink:0;}.oname{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;}
+.odesc{font-size:11px;color:var(--ghost);margin-top:1px;}
+.rbox{margin-top:16px;background:rgba(212,160,23,.08);border:1px solid rgba(212,160,23,.2);border-radius:4px;padding:12px 14px;}
+.rbox-l{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--multi);margin-bottom:6px;}
+.rbox-t{font-size:12px;color:var(--soft);line-height:1.6;}
+#footer{position:relative;z-index:5;border-top:1px solid var(--rim);padding:18px 52px;display:flex;align-items:center;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px;color:var(--ghost);}
+.fb{color:var(--html);font-weight:500;letter-spacing:1px;}
+@media(max-width:1100px){.card-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:720px){#header,#main{padding-left:20px;padding-right:20px;}.card-grid,.card-grid.two{grid-template-columns:1fr;}.hero-card{grid-template-columns:1fr;}.hc-col+.hc-col{border-left:none;border-top:1px solid var(--rim);}}
+</style>
+</head>
+<body>
+<div id="header">
+  <div class="header-inner">
+    <div>
+      <div class="h-kicker">Qlik MCP · External Deliverables · Vol. II</div>
+      <h1 class="h-title">Pull from <span class="a1">Qlik.</span><br>Push to <span class="a2">Everywhere.</span></h1>
+      <p class="h-desc">Prompts that reach beyond the Qlik UI - pulling live data via MCP and producing HTML dashboards, PowerPoint decks, Word reports, Excel workbooks and more. One prompt. Real data. Board-ready.</p>
+    </div>
+    <div class="h-meta">
+      <div class="tag">Principal Consultant Edition</div>
+      <div class="line">By <strong>Jandré Killian</strong></div>
+      <div class="line">Qlik <strong>Partner Ambassador</strong></div>
+      <div class="line">March <strong>2026</strong></div>
+    </div>
+  </div>
+  <div class="format-tabs">
+    <div class="ftab active" onclick="filt('all',this)"><div class="fdot" style="background:#d4a017"></div>All<span class="fc">14</span></div>
+    <div class="ftab" onclick="filt('html',this)"><div class="fdot" style="background:#e8562a"></div>HTML Dashboard<span class="fc">4</span></div>
+    <div class="ftab" onclick="filt('pptx',this)"><div class="fdot" style="background:#c9380a"></div>PowerPoint<span class="fc">3</span></div>
+    <div class="ftab" onclick="filt('docx',this)"><div class="fdot" style="background:#1e6fd4"></div>Word Doc<span class="fc">3</span></div>
+    <div class="ftab" onclick="filt('xlsx',this)"><div class="fdot" style="background:#1a7a45"></div>Excel<span class="fc">2</span></div>
+    <div class="ftab" onclick="filt('multi',this)"><div class="fdot" style="background:#d4a017"></div>Multi-Format<span class="fc">2</span></div>
+  </div>
+</div>
+
+<div id="main">
+
+<!-- HERO -->
+<div class="hero-card" data-fmt="multi" style="margin-top:32px">
+  <div class="hc-col">
+    <div class="hc-eyebrow">The Ultimate Demo Prompt</div>
+    <div class="hc-title">The <em>Full Stack</em> Deliverable</div>
+    <div class="hc-desc">One prompt. MCP queries live Qlik data, then produces four simultaneous deliverables. This is the jaw-drop moment for any audience - a consultant would spend a full day producing these separately.</div>
+    <div class="ostack">
+      <div class="orow"><div class="oicon">🌐</div><div><div class="oname" style="color:#e8562a">HTML Dashboard</div><div class="odesc">Interactive charts, KPIs, filters</div></div></div>
+      <div class="orow"><div class="oicon">📊</div><div><div class="oname" style="color:#c9380a">PowerPoint Deck</div><div class="odesc">Board-ready branded slides</div></div></div>
+      <div class="orow"><div class="oicon">📄</div><div><div class="oname" style="color:#1e6fd4">Word Document</div><div class="odesc">Formal audit report with narrative</div></div></div>
+      <div class="orow"><div class="oicon">📋</div><div><div class="oname" style="color:#1a7a45">Excel Workbook</div><div class="odesc">Raw data + pivot-ready tables</div></div></div>
+    </div>
+  </div>
+  <div class="hc-col">
+    <div class="hc-eyebrow">The Prompt</div>
+    <div class="hc-prompt"><span class="hl">Pull all supplier quality data from the SAP Procurement app</span> - top vendors by defect rate, defect cost by year, material risk ranking, and company code breakdown.
+
+Using that live data, produce <span class="op">all four of the following</span>:
+
+<span class="out">① HTML Dashboard</span> - dark-themed interactive dashboard with KPI tiles, a bar chart for vendor defect rates, a trend line for 2016–2020, and a filterable table. Client-presentable quality.
+
+<span class="out">② PowerPoint</span> - 6-slide executive deck: title, executive summary, top vendor risks, year trend, cost analysis, and recommended actions. Professional dark theme.
+
+<span class="out">③ Word Document</span> - formal supplier quality audit report with: scope, methodology, findings, risk matrix table, and 5 recommendations.
+
+<span class="out">④ Excel Workbook</span> - 3 sheets: raw vendor data, pivot-ready summary by year, and a risk scorecard with RAG status applied.</div>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">
+      <span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span>
+      <span class="tchip">qlik_get_fields</span><span class="tchip">qlik_select_values</span><span class="tchip">qlik_clear_selections</span>
+    </div>
+  </div>
+  <div class="hc-col">
+    <div class="hc-eyebrow">Why this wins every room</div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div style="background:var(--deep);border:1px solid var(--rim);border-radius:4px;padding:11px 13px"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#e8562a;margin-bottom:4px">HTML</div><div style="font-size:11px;color:var(--soft);line-height:1.5">No BI licence needed. Anyone with a browser sees live Qlik data - instantly shareable outside the organisation.</div></div>
+      <div style="background:var(--deep);border:1px solid var(--rim);border-radius:4px;padding:11px 13px"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#c9380a;margin-bottom:4px">PPTX</div><div style="font-size:11px;color:var(--soft);line-height:1.5">Real numbers in slides. No copy-paste from Qlik. No stale screenshots. Rebuilds from live data every time.</div></div>
+      <div style="background:var(--deep);border:1px solid var(--rim);border-radius:4px;padding:11px 13px"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#1e6fd4;margin-bottom:4px">DOCX</div><div style="font-size:11px;color:var(--soft);line-height:1.5">ISO-auditable written report. Not a template - a real narrative built from the data it just read.</div></div>
+      <div style="background:var(--deep);border:1px solid var(--rim);border-radius:4px;padding:11px 13px"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#1a7a45;margin-bottom:4px">XLSX</div><div style="font-size:11px;color:var(--soft);line-height:1.5">Finance gets structured numbers without Qlik access. MCP bridges the tool gap automatically.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- HTML -->
+<div class="section-head" data-fmt="html"><div class="sh-icon" style="background:rgba(232,86,42,.15)">🌐</div><div><div class="sh-title" style="color:#e8562a">HTML Dashboards</div><div class="sh-sub">Interactive · Browser-based · Zero Qlik licence required</div></div><hr></div>
+<div class="card-grid" data-fmt="html">
+
+<div class="pcard" data-fmt="html">
+  <div class="pcard-num">01</div>
+  <div class="pcard-badge" style="background:rgba(232,86,42,.12);color:#e8562a;border:1px solid rgba(232,86,42,.25)">🌐 HTML Dashboard</div>
+  <div class="pcard-title">The Executive Portal</div>
+  <div class="pcard-prompt"><span class="hl">Query the SAP Procurement app</span> for: total spend, defect rate, top 10 vendors by risk, and year-on-year trend 2016–2020.
+
+Build a <span class="out">single-page HTML dashboard</span>:
+- Hero KPI strip (Spend · Defect Rate · Cost of Defects · At-Risk Vendors)
+- Horizontal bar chart: vendors ranked by defect rate
+- Line chart: defect rate trend by year
+- Sortable data table with RAG status column
+
+<span class="op">Dark theme. Mobile-responsive. CDN chart library only. Client logo placeholder top-left.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 dashboard.html</span><span class="ptag">📊 Chart.js</span><span class="ptag">🔴🟡🟢 RAG</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span><span class="tchip">qlik_get_fields</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> Share a single HTML file with a client who has no Qlik access. They get a live-data feel with real numbers - looks like a BI product, built in one prompt.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="html">
+  <div class="pcard-num">02</div>
+  <div class="pcard-badge" style="background:rgba(232,86,42,.12);color:#e8562a;border:1px solid rgba(232,86,42,.25)">🌐 HTML Dashboard</div>
+  <div class="pcard-title">The Supplier Scorecard Portal</div>
+  <div class="pcard-prompt"><span class="hl">Pull all vendors with more than 50 defects</span> from SAP Procurement.
+
+Create a <span class="out">filterable HTML scorecard page</span>:
+- Filter bar: by country, company code, year
+- Card grid: one card per vendor showing name, defect rate, spend, risk badge (HIGH/MED/LOW)
+- Clicking a vendor card expands to show their top 3 defective materials
+- Export-to-CSV button for the visible filtered set
+
+<span class="op">Professional B2B aesthetic. Subtle animations on load. No build tools - pure HTML/JS.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 scorecard.html</span><span class="ptag">🔍 Live filter</span><span class="ptag">⬇️ CSV export</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_get_field_values</span><span class="tchip">qlik_select_values</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> A supplier-facing portal the procurement team can use without Qlik credentials. Filtering + drill-down makes it feel like a real app - one prompt.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="html">
+  <div class="pcard-num">03</div>
+  <div class="pcard-badge" style="background:rgba(232,86,42,.12);color:#e8562a;border:1px solid rgba(232,86,42,.25)">🌐 HTML Dashboard</div>
+  <div class="pcard-title">The Boardroom Briefing Screen</div>
+  <div class="pcard-prompt"><span class="hl">Get total defects, spend, defect rate, and top 5 at-risk vendors</span> from SAP Procurement.
+
+Build a <span class="out">fullscreen TV briefing display</span> for meeting rooms:
+- Large animated KPI numbers with subtle pulse
+- Scrolling ticker of high-risk vendor names
+- Donut chart: defect distribution by company code
+- "As at [date]" timestamp
+- 16:9 layout · High contrast · No scrollbars
+
+<span class="op">Designed to run on a wall screen during a steering committee meeting.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 briefing-screen.html</span><span class="ptag">📺 TV 16:9</span><span class="ptag">✨ Animated</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> Numbers live from Qlik, displayed without opening Qlik. The "as at" timestamp is the detail that makes executives ask "how does it do that?"</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="html">
+  <div class="pcard-num">04</div>
+  <div class="pcard-badge" style="background:rgba(232,86,42,.12);color:#e8562a;border:1px solid rgba(232,86,42,.25)">🌐 HTML Dashboard</div>
+  <div class="pcard-title">The Geo Intelligence Map</div>
+  <div class="pcard-prompt"><span class="hl">Query vendor country, total defects, defect rate, and spend</span> for all vendor countries in SAP Procurement.
+
+Build an <span class="out">HTML bubble-map dashboard</span>:
+- World map with vendor countries shown as bubbles
+- Bubble size = spend volume · Bubble colour = defect rate (green → red)
+- Hover tooltip: country, defect rate, spend, vendor count
+- Side panel: ranked table of top 10 countries by risk
+- Toggle: view by defect rate OR by spend volume
+
+<span class="op">Use D3.js from CDN. Clean, minimal design. Downloadable as standalone HTML.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 geo-map.html</span><span class="ptag">🗺️ D3 map</span><span class="ptag">💡 Tooltips</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_get_field_values</span><span class="tchip">qlik_list_dimensions</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> Qlik's own geo charts require config. This produces a custom interactive world map from your data in one prompt - runs in any browser, shareable to anyone.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+</div>
+
+<!-- PPTX -->
+<div class="section-head" data-fmt="pptx"><div class="sh-icon" style="background:rgba(201,56,10,.15)">📊</div><div><div class="sh-title" style="color:#c9380a">PowerPoint Presentations</div><div class="sh-sub">Board-ready · Data-embedded · Zero copy-paste from Qlik</div></div><hr></div>
+<div class="card-grid" data-fmt="pptx">
+
+<div class="pcard" data-fmt="pptx">
+  <div class="pcard-num">05</div>
+  <div class="pcard-badge" style="background:rgba(201,56,10,.12);color:#c9380a;border:1px solid rgba(201,56,10,.25)">📊 PowerPoint</div>
+  <div class="pcard-title">The Board Quality Review</div>
+  <div class="pcard-prompt"><span class="hl">Pull supplier quality KPIs from SAP Procurement</span>: defects, defect rate, cost of poor quality, top 5 vendors by risk, year trend 2016–2020.
+
+Build a <span class="out">10-slide PowerPoint board presentation</span>:
+1. Title - "Supplier Quality Review Q4 2020"
+2. Executive Summary - 4 KPI cards with real numbers
+3. Defect Trend - bar chart 2016–2020
+4. Top Risk Vendors - horizontal ranked bars
+5. Worst Products by Rate - table with RAG
+6. Cost Exposure - financial impact
+7. Geographic Risk - vendor country breakdown
+8. Root Cause Summary - 3 categories
+9. Recommended Actions - 5 action items
+10. Next Steps - timeline
+
+<span class="op">Dark navy theme. Real chart data. No placeholders.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 board-review.pptx</span><span class="ptag">📊 10 slides</span><span class="ptag">🎨 Branded</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span><span class="tchip">qlik_select_values</span><span class="tchip">qlik_clear_selections</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> A consultant typically spends 4+ hours building a board deck from Qlik exports. This produces a fully populated, properly designed PPTX with real numbers - in minutes.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="pptx">
+  <div class="pcard-num">06</div>
+  <div class="pcard-badge" style="background:rgba(201,56,10,.12);color:#c9380a;border:1px solid rgba(201,56,10,.25)">📊 PowerPoint</div>
+  <div class="pcard-title">The Vendor Business Review</div>
+  <div class="pcard-prompt"><span class="hl">For vendor "Mara S.A." only</span>, pull all their data: products, defect rates, spend, year trend, vs company average.
+
+Build a <span class="out">6-slide vendor QBR deck</span> presented TO the vendor:
+1. Vendor Profile - name, country, total spend
+2. Performance vs Benchmark - their rate vs average
+3. Product Deep Dive - all materials + defect rates
+4. Trend Analysis - year-by-year performance
+5. Areas of Concern - top 3 flagged products
+6. Improvement Targets - 3 measurable KPI targets for 2021
+
+<span class="op">Professional, fact-based tone. Suitable for a supplier quarterly business review meeting.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 vendor-qbr.pptx</span><span class="ptag">🤝 Supplier-facing</span><span class="ptag">📈 Benchmark</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_select_values</span><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_clear_selections</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> Vendor QBR decks are high-effort, politically sensitive. MCP filters to one vendor, computes benchmark comparisons live, builds the deck - no manual data lookup at all.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="pptx">
+  <div class="pcard-num">07</div>
+  <div class="pcard-badge" style="background:rgba(201,56,10,.12);color:#c9380a;border:1px solid rgba(201,56,10,.25)">📊 PowerPoint</div>
+  <div class="pcard-title">The Meetup Showcase Deck</div>
+  <div class="pcard-prompt"><span class="hl">Pull headline stats from SAP Procurement</span>: total records, vendor count, defect rate, cost of poor quality, most interesting outlier.
+
+Build the <span class="out">Johannesburg Qlik Meetup showcase deck</span> (March 25, 2026):
+- Slide 1: What is Qlik MCP?
+- Slides 2–3: Live demo flow - what I asked, what it did, what it built
+- Slides 4–5: Real numbers from SAP Procurement as proof points
+- Slide 6: 5 use cases any Qlik customer can do today
+- Slide 7: Call to action 
+
+<span class="op">Dynamic, modern design. Use real data as proof throughout. Qlik green branding.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 meetup-deck.pptx</span><span class="ptag">🎤 Conference-ready</span><span class="ptag">✅ Real proof</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_describe_app</span><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> You use MCP to pull the data, build the deck about MCP, and present using slides MCP just made - with real numbers. The meta-ness of it is the entire point.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+</div>
+
+<!-- DOCX -->
+<div class="section-head" data-fmt="docx"><div class="sh-icon" style="background:rgba(30,111,212,.15)">📄</div><div><div class="sh-title" style="color:#1e6fd4">Word Documents</div><div class="sh-sub">Formal reports · Audit-ready · Data-backed narrative</div></div><hr></div>
+<div class="card-grid" data-fmt="docx">
+
+<div class="pcard" data-fmt="docx">
+  <div class="pcard-num">08</div>
+  <div class="pcard-badge" style="background:rgba(30,111,212,.12);color:#1e6fd4;border:1px solid rgba(30,111,212,.25)">📄 Word Document</div>
+  <div class="pcard-title">The Supplier Audit Report</div>
+  <div class="pcard-prompt"><span class="hl">Query SAP Procurement for all supplier quality findings</span>: defect rates, financial exposure, top offenders, year trend, geographic distribution.
+
+Generate a <span class="out">formal supplier quality audit report (.docx)</span>:
+- Cover page with date and classification
+- Executive Summary (half page, non-technical)
+- Scope and Methodology
+- Findings with <span class="op">embedded data tables</span>
+- Risk Matrix: vendors × risk level
+- Financial Impact Analysis with real figures
+- 5 Numbered Audit Recommendations
+- Appendix: full vendor data table
+
+<span class="op">ISO 9001 style. Professional heading hierarchy. Table of contents. Page numbers.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 audit-report.docx</span><span class="ptag">📑 TOC</span><span class="ptag">📊 Data tables</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span><span class="tchip">qlik_select_values</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> Audit reports take days to write. MCP pulls the findings and writes the document. ISO-style framing means it lands as a credible governance artefact, not just a summary.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="docx">
+  <div class="pcard-num">09</div>
+  <div class="pcard-badge" style="background:rgba(30,111,212,.12);color:#1e6fd4;border:1px solid rgba(30,111,212,.25)">📄 Word Document</div>
+  <div class="pcard-title">The App Technical Handover</div>
+  <div class="pcard-prompt"><span class="hl">Describe the SAP Procurement Qlik app completely</span>: data model, tables, fields, master measures with expressions, master dimensions, sheets, data sources.
+
+Produce a <span class="out">technical handover document (.docx)</span>:
+- App Overview and Purpose
+- Data Architecture (tables, row counts, key relationships)
+- Master Measures - <span class="op">full list with expressions explained in plain English</span>
+- Master Dimensions - fields, labels, use cases
+- Sheet Inventory
+- Known Limitations and Technical Debt
+- Developer Onboarding Checklist (10 items)
+
+<span class="op">Targeted at a Qlik developer inheriting this app. Use code formatting for expressions.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 app-handover.docx</span><span class="ptag">💻 Code blocks</span><span class="ptag">✅ Dev checklist</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_describe_app</span><span class="tchip">qlik_get_fields</span><span class="tchip">qlik_list_measures</span><span class="tchip">qlik_list_dimensions</span><span class="tchip">qlik_list_sheets</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> Every consultant's nightmare is inheriting an undocumented Qlik app. This produces complete technical documentation in one prompt - all 27 measure expressions explained in plain English.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="docx">
+  <div class="pcard-num">10</div>
+  <div class="pcard-badge" style="background:rgba(30,111,212,.12);color:#1e6fd4;border:1px solid rgba(30,111,212,.25)">📄 Word Document</div>
+  <div class="pcard-title">The Business Case Document</div>
+  <div class="pcard-prompt"><span class="hl">Pull cost of poor quality, defect volumes, at-risk vendor count, and financial exposure</span> from SAP Procurement.
+
+Write a <span class="out">business case document (.docx)</span> for supplier quality investment:
+- Problem Statement - <span class="op">backed by real data figures</span>
+- Current State Analysis - actual numbers from the app
+- Cost of Inaction - projected 3-year exposure
+- Proposed Solution: Supplier Quality Management programme
+- Expected Benefits with ROI calculation
+- Implementation Roadmap (3 phases, 12 months)
+- Risk and Mitigation
+- Approval and Sign-off section
+
+<span class="op">Executive reading level. Every claim backed by a figure from the data. No invented numbers.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 business-case.docx</span><span class="ptag">💰 ROI calc</span><span class="ptag">📋 Sign-off section</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> A business case needs real numbers to be credible. MCP pulls the actual cost exposure and injects it into a properly structured investment document. Zero placeholders.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+</div>
+
+<!-- XLSX -->
+<div class="section-head" data-fmt="xlsx"><div class="sh-icon" style="background:rgba(26,122,69,.15)">📋</div><div><div class="sh-title" style="color:#1a7a45">Excel Workbooks</div><div class="sh-sub">Finance-ready · Pivot-structured · RAG scorecards</div></div><hr></div>
+<div class="card-grid two" data-fmt="xlsx">
+
+<div class="pcard" data-fmt="xlsx">
+  <div class="pcard-num">11</div>
+  <div class="pcard-badge" style="background:rgba(26,122,69,.12);color:#1a7a45;border:1px solid rgba(26,122,69,.25)">📋 Excel Workbook</div>
+  <div class="pcard-title">The Finance Team Data Pack</div>
+  <div class="pcard-prompt"><span class="hl">Extract from SAP Procurement</span>: all vendors with defects, their spend, defect count, defect rate, cost of poor quality, and company code.
+
+Build an <span class="out">Excel workbook (.xlsx)</span> with 4 sheets:
+- "Raw Data": every vendor row, autofilter on
+- "By Year": pivot-ready - year × company code × defect rate × spend
+- "Risk Scorecard": vendors with <span class="op">RAG column</span> (Red &gt;0.15%, Amber 0.10–0.15%, Green &lt;0.10%) and conditional formatting applied
+- "Top 20": ranked by financial risk exposure
+
+<span class="op">Frozen header rows. Column widths adjusted. Number formats applied. Print-ready layout.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 data-pack.xlsx</span><span class="ptag">4️⃣ 4 sheets</span><span class="ptag">🔴🟡🟢 Conditional format</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_get_field_values</span><span class="tchip">qlik_list_measures</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> Finance never wants to log into Qlik. Hand them a structured Excel with conditional formatting already applied - pulled from live Qlik data - and they'll trust it immediately.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="xlsx">
+  <div class="pcard-num">12</div>
+  <div class="pcard-badge" style="background:rgba(26,122,69,.12);color:#1a7a45;border:1px solid rgba(26,122,69,.25)">📋 Excel Workbook</div>
+  <div class="pcard-title">The Monthly Ops Tracker</div>
+  <div class="pcard-prompt"><span class="hl">Pull monthly defect data from SAP Procurement</span>: defects by month × year × vendor × company code.
+
+Create an <span class="out">Excel operational tracker (.xlsx)</span>:
+- "Monthly View": month × year grid, defect counts per cell, <span class="op">heat-map colour scale</span> white-to-red
+- "Vendor Trend": each vendor as a row, columns = 2016–2020 yearly rates, sparkline in final column
+- "Alerts": vendors where defect rate <span class="op">increased YoY in the last 2 periods</span>, flagged red
+- "Data Dictionary": field names, descriptions, calculation methodology
+
+<span class="op">Ready for monthly operations review. No Qlik access needed to use or share it.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 ops-tracker.xlsx</span><span class="ptag">🌡️ Heat-map</span><span class="ptag">📉 Sparklines</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_select_values</span><span class="tchip">qlik_clear_selections</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> The heat-map month grid is something most analysts build manually in 2 hours. MCP queries the time-series data and formats it as a ready-to-use operational review document.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+</div>
+
+<!-- MULTI -->
+<div class="section-head" data-fmt="multi"><div class="sh-icon" style="background:rgba(212,160,23,.15)">⚡</div><div><div class="sh-title" style="color:#d4a017">Bonus: Email + Meeting Pack</div><div class="sh-sub">Stakeholder comms · Full meeting packs · One-shot deliverables</div></div><hr></div>
+<div class="card-grid two" data-fmt="multi">
+
+<div class="pcard" data-fmt="multi">
+  <div class="pcard-num">13</div>
+  <div class="pcard-badge" style="background:rgba(212,160,23,.12);color:#d4a017;border:1px solid rgba(212,160,23,.25)">📧 HTML Email</div>
+  <div class="pcard-title">The Monthly Quality Digest</div>
+  <div class="pcard-prompt"><span class="hl">Pull the latest quality stats from SAP Procurement</span>: total defects, defect rate vs prior year, top 3 risk vendors, biggest mover (improved or worsened).
+
+Generate a <span class="out">professional HTML email digest</span> ready to paste into Outlook:
+- Suggested subject line
+- Header banner with month/year
+- 3-column KPI summary (Defect Rate | vs PY | Cost Exposure)
+- Top 3 vendors at risk - name, rate, trend arrow (↑↓ →)
+- One-paragraph narrative for a <span class="op">non-technical procurement director</span>
+- Footer: data source, Qlik app link, unsubscribe placeholder
+
+<span class="op">Inline CSS only (email-safe). Mobile responsive.</span></div>
+  <div class="pcard-produces"><span class="ptag">📁 digest-email.html</span><span class="ptag">📧 Inline CSS</span><span class="ptag">📱 Mobile-safe</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span><span class="tchip">qlik_select_values</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> Automated quality digest emails normally need NPrinting or a custom integration. This produces a pixel-perfect data-populated HTML email in one prompt - no NPrinting licence needed.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+<div class="pcard" data-fmt="multi">
+  <div class="pcard-num">14</div>
+  <div class="pcard-badge" style="background:rgba(212,160,23,.12);color:#d4a017;border:1px solid rgba(212,160,23,.25)">🎯 Multi-Format</div>
+  <div class="pcard-title">The Complete Meeting Pack</div>
+  <div class="pcard-prompt"><span class="hl">It's the day before the Supplier Quality Steering Committee.</span>
+
+Pull all relevant data from SAP Procurement and produce <span class="op">everything needed for tomorrow's meeting</span>:
+
+<span class="out">① Pre-read email</span> - 5-bullet executive summary, ready to send tonight
+<span class="out">② Meeting PowerPoint</span> - 8 slides: findings, agenda, decisions required
+<span class="out">③ Data Annex Excel</span> - supporting numbers for any question in the meeting
+<span class="out">④ Action Log Word doc</span> - pre-populated with 5 likely actions from the data, owner/date columns blank for the room
+
+<span class="op">All four outputs use consistent numbers, same vendor names, same framing. No contradictions.</span></div>
+  <div class="pcard-produces"><span class="ptag">📧 Pre-read email</span><span class="ptag">📊 8-slide deck</span><span class="ptag">📋 Data annex</span><span class="ptag">📄 Action log</span></div>
+  <div class="pcard-tools"><span class="tchip">qlik_create_data_object</span><span class="tchip">qlik_list_measures</span><span class="tchip">qlik_select_values</span><span class="tchip">qlik_clear_selections</span><span class="tchip">qlik_describe_app</span></div>
+  <div class="pcard-why"><strong>Impact:</strong> "Everything for tomorrow's meeting" is the moment that redefines what an AI assistant means to a consulting team. Four consistent outputs from one data pull. This is the prompt that closes contracts.</div>
+  <button class="copy-btn" onclick="cp(this)">Copy Prompt</button>
+</div>
+
+</div>
+</div>
+
+<div id="footer">
+  <span class="fb">Jandré Killian</span>
+  <span>Qlik Partner Ambassador · Johannesburg Qlik Meetup · 25 March 2026</span>
+  <span style="color:#3a4f68">MCP · xxx.yy.qlikcloud.com/api/ai/mcp</span>
+</div>
+
+<script>
+function cp(btn){
+  const card=btn.closest('.pcard');
+  const p=card.querySelector('.pcard-prompt');
+  const t=p?p.innerText.replace(/^[^\w]*/,'').trim():'';
+  navigator.clipboard.writeText(t).then(()=>{
+    btn.textContent='✓ Copied';btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent='Copy Prompt';btn.classList.remove('ok');},2000);
+  });
+}
+function filt(fmt,tab){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  document.querySelectorAll('[data-fmt]').forEach(el=>{
+    el.style.display=(fmt==='all'||el.getAttribute('data-fmt')===fmt)?'':'none';
+  });
+}
+</script>
+</body>
+</html>

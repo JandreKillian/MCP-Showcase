@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qlik MCP Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:   #060810;
+  --deep:   #0b0e1a;
+  --panel:  #10151f;
+  --raised: #151c2a;
+  --rim:    #1e2a3d;
+  --rim2:   #28374f;
+  --accent: #009845;
+  --accent2:#00c45a;
+  --blue:   #4a9eff;
+  --orange: #e8562a;
+  --text:   #dde8f8;
+  --soft:   #8a9fbc;
+  --ghost:  #3a4f68;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 0%, rgba(0,152,69,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 55% at 85% 100%, rgba(74,158,255,.08) 0%, transparent 60%);
+}
+
+/* ── HEADER ── */
+#header {
+  position: relative;
+  z-index: 10;
+  padding: 0 5vw;
+  border-bottom: 1px solid var(--rim);
+  background: rgba(6,8,16,.97);
+}
+
+.header-inner {
+  padding: 40px 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kicker {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.kicker::before {
+  content: '';
+  width: 36px;
+  height: 1.5px;
+  background: var(--accent);
+}
+
+.site-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 7vw, 88px);
+  line-height: .92;
+  letter-spacing: 1px;
+}
+.site-title .q { color: var(--accent); }
+.site-title .m { color: var(--blue); }
+
+.site-desc {
+  font-size: 15px;
+  color: var(--soft);
+  line-height: 1.7;
+  max-width: 600px;
+  margin-top: 6px;
+}
+
+/* ── NAV PILLS ── */
+.nav-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 20px 0;
+}
+.nav-pills a {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--soft);
+  border: 1px solid var(--rim2);
+  padding: 6px 14px;
+  border-radius: 2px;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.nav-pills a:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: rgba(0,152,69,.08);
+}
+
+/* ── MAIN ── */
+main {
+  position: relative;
+  z-index: 5;
+  padding: 60px 5vw 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+}
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rim);
+}
+
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ghost);
+  padding: 4px 10px;
+  border: 1px solid var(--rim2);
+  border-radius: 2px;
+}
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(28px, 4vw, 42px);
+  letter-spacing: .5px;
+  color: var(--text);
+}
+
+/* ── VIDEO GRID ── */
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr));
+  gap: 28px;
+}
+
+.video-card {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color .25s, box-shadow .25s;
+}
+.video-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 8px 32px rgba(0,152,69,.12);
+}
+
+.video-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--deep);
+  display: block;
+}
+.video-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.video-info {
+  padding: 20px 22px 22px;
+  border-top: 1px solid var(--rim);
+}
+
+.video-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.video-title {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+/* ── DOC GRID ── */
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 24px;
+}
+
+/* ── PDF CARD ── */
+.pdf-card {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color .25s, box-shadow .25s;
+}
+.pdf-card:hover {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 1px var(--orange), 0 8px 32px rgba(232,86,42,.10);
+}
+
+.pdf-preview {
+  width: 100%;
+  height: 380px;
+  border: none;
+  display: block;
+  background: var(--deep);
+}
+
+.pdf-info {
+  padding: 18px 22px 22px;
+  border-top: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pdf-meta .pdf-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 6px;
+}
+.pdf-meta .pdf-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.btn-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--orange);
+  border: 1px solid var(--orange);
+  padding: 8px 16px;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .2s, color .2s;
+}
+.btn-open:hover {
+  background: var(--orange);
+  color: #fff;
+}
+
+/* ── HTML PAGE CARDS ── */
+.html-card {
+  background: var(--panel);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: border-color .25s, box-shadow .25s, transform .25s;
+}
+.html-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 1px var(--blue), 0 12px 36px rgba(74,158,255,.12);
+  transform: translateY(-2px);
+}
+
+.html-preview {
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  position: relative;
+  background: var(--deep);
+}
+
+.html-preview iframe {
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: top left;
+  pointer-events: none;
+  border: none;
+}
+
+.html-preview-dark {
+  background: #060810;
+}
+
+.html-preview-light {
+  background: #f5f0e8;
+}
+
+.html-info {
+  padding: 20px 22px 24px;
+  border-top: 1px solid var(--rim);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.html-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.html-title {
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.html-desc {
+  font-size: 13px;
+  color: var(--soft);
+  line-height: 1.6;
+}
+
+.html-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-top: auto;
+  padding-top: 6px;
+}
+.html-cta::after {
+  content: '→';
+  transition: transform .2s;
+}
+.html-card:hover .html-cta::after {
+  transform: translateX(4px);
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 5;
+  padding: 32px 5vw;
+  border-top: 1px solid var(--rim);
+  background: rgba(6,8,16,.95);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+.footer-brand .q { color: var(--accent); }
+
+.footer-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--ghost);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .pdf-info { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="header">
+  <div class="header-inner">
+    <div class="kicker">MCP Showcase &nbsp;/&nbsp; Model Context Protocol</div>
+    <h1 class="site-title">
+      <span class="q">Qlik</span> <span class="m">MCP</span><br>Showcase
+    </h1>
+    <p class="site-desc">
+      Demonstrations of Qlik's Model Context Protocol integrations — including live build recordings,
+      capability documentation, and interactive prompt libraries.
+    </p>
+  </div>
+  <nav class="nav-pills">
+    <a href="#videos">Demo Videos</a>
+    <a href="#docs">Documentation</a>
+    <a href="#pages">Interactive Pages</a>
+  </nav>
+</header>
+
+<!-- MAIN CONTENT -->
+<main>
+
+  <!-- VIDEOS -->
+  <section id="videos">
+    <div class="section-header">
+      <span class="section-label">01</span>
+      <h2 class="section-title">Demo Videos</h2>
+    </div>
+    <div class="video-grid">
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <video controls preload="metadata" poster="">
+            <source src="MCP%20Mashup%20Build%20-%20Claude%20AI.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="video-info">
+          <div class="video-tag">Build Demo &nbsp;·&nbsp; Claude AI</div>
+          <div class="video-title">MCP Mashup Build — Claude AI</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-thumb">
+          <video controls preload="metadata" poster="">
+            <source src="Qlik%20MCP%20Lineage%20Build.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="video-info">
+          <div class="video-tag">Build Demo &nbsp;·&nbsp; Data Lineage</div>
+          <div class="video-title">Qlik MCP Lineage Build</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DOCUMENTATION -->
+  <section id="docs">
+    <div class="section-header">
+      <span class="section-label">02</span>
+      <h2 class="section-title">Documentation</h2>
+    </div>
+    <div class="doc-grid">
+
+      <div class="pdf-card">
+        <iframe
+          class="pdf-preview"
+          src="Qlik%20MCP%20Capabilities%20V1.pdf#toolbar=0&navpanes=0&view=FitH"
+          title="Qlik MCP Capabilities V1">
+        </iframe>
+        <div class="pdf-info">
+          <div class="pdf-meta">
+            <div class="pdf-tag">PDF &nbsp;·&nbsp; Capabilities</div>
+            <div class="pdf-name">Qlik MCP Capabilities V1</div>
+          </div>
+          <a href="Qlik%20MCP%20Capabilities%20V1.pdf" target="_blank" class="btn-open">
+            Open PDF
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- INTERACTIVE PAGES -->
+  <section id="pages">
+    <div class="section-header">
+      <span class="section-label">03</span>
+      <h2 class="section-title">Interactive Pages</h2>
+    </div>
+    <div class="doc-grid">
+
+      <a href="qlik-mcp-output-prompts_1.html" class="html-card">
+        <div class="html-preview html-preview-dark">
+          <iframe
+            src="qlik-mcp-output-prompts_1.html"
+            title="Preview: Qlik MCP External Output Prompts"
+            tabindex="-1"
+            aria-hidden="true"
+            loading="lazy">
+          </iframe>
+        </div>
+        <div class="html-info">
+          <div class="html-tag">Interactive &nbsp;·&nbsp; Output Prompts</div>
+          <div class="html-title">Qlik MCP — External Output Prompts</div>
+          <div class="html-desc">
+            A curated prompt library for generating external output formats from Qlik MCP — HTML, PPTX, DOCX, XLSX, and multi-format exports.
+          </div>
+          <span class="html-cta">Open Page</span>
+        </div>
+      </a>
+
+      <a href="qlik-mcp-power-prompts_1.html" class="html-card">
+        <div class="html-preview html-preview-light">
+          <iframe
+            src="qlik-mcp-power-prompts_1.html"
+            title="Preview: Qlik MCP Power Prompts"
+            tabindex="-1"
+            aria-hidden="true"
+            loading="lazy">
+          </iframe>
+        </div>
+        <div class="html-info">
+          <div class="html-tag">Interactive &nbsp;·&nbsp; Power Prompts</div>
+          <div class="html-title">Qlik MCP — Power Prompts</div>
+          <div class="html-desc">
+            Advanced prompt patterns and power-user techniques for getting the most out of Qlik's Model Context Protocol integrations.
+          </div>
+          <span class="html-cta">Open Page</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand"><span class="q">Qlik</span> MCP Showcase</div>
+  <div class="footer-note">Model Context Protocol &nbsp;·&nbsp; Corpsolve</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qlik MCP - Power Prompts</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@300;400;500;700&family=Archivo:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --ink:      #0d0f14;
+  --paper:    #f5f0e8;
+  --cream:    #ede8dc;
+  --warm:     #e8e0d0;
+  --qgreen:   #005c35;
+  --qlight:   #00875a;
+  --qpale:    #e6f4ee;
+  --rust:     #c0392b;
+  --gold:     #b8860b;
+  --slate:    #2c3e50;
+  --steel:    #4a5568;
+  --fog:      #8a9ab0;
+  --rule:     rgba(13,15,20,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  min-height: 100vh;
+  padding: 0 0 80px;
+  position: relative;
+}
+
+/* subtle grain overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 1000; pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  border-bottom: 2px solid var(--ink);
+  padding: 28px 48px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.masthead-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--qgreen);
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.masthead-eyebrow::before {
+  content: '';
+  display: inline-block; width: 28px; height: 1.5px;
+  background: var(--qgreen);
+}
+
+.masthead-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 5vw, 58px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -1.5px;
+  color: var(--ink);
+}
+.masthead-title em {
+  font-style: italic;
+  color: var(--qgreen);
+}
+
+.masthead-meta {
+  text-align: right;
+}
+.masthead-meta .issue {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--fog);
+  margin-bottom: 4px; letter-spacing: 1px;
+}
+.masthead-meta .byline {
+  font-size: 13px; font-weight: 600;
+  color: var(--slate);
+}
+.masthead-meta .role {
+  font-size: 11px; color: var(--fog);
+}
+
+/* ── INTRO STRIP ── */
+.intro-strip {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 16px 48px;
+  display: flex; align-items: center; gap: 20px;
+  font-size: 13px; line-height: 1.6;
+}
+.intro-strip strong { color: #7fffbf; }
+.intro-strip .tag {
+  display: inline-flex; align-items: center;
+  background: var(--qgreen); color: white;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 2px; white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── MAIN GRID ── */
+.grid {
+  padding: 36px 48px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+
+/* ── PROMPT CARD ── */
+.card {
+  border: 1px solid var(--rule);
+  padding: 28px 26px 24px;
+  position: relative;
+  background: var(--paper);
+  transition: background 0.2s;
+  cursor: default;
+}
+.card:hover { background: var(--cream); }
+
+/* category tag strip at top */
+.card-cat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.cat-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* card number */
+.card-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px; font-weight: 700;
+  line-height: 1;
+  color: var(--rule);
+  position: absolute; top: 20px; right: 22px;
+  pointer-events: none;
+  letter-spacing: -2px;
+}
+
+/* card title */
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 10px;
+  color: var(--ink);
+  max-width: 85%;
+}
+
+/* impact label */
+.card-impact {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 2px;
+  margin-bottom: 14px;
+}
+
+/* the actual prompt */
+.card-prompt {
+  background: var(--ink);
+  color: #c8e6c9;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.65;
+  padding: 14px 15px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+  position: relative;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.card-prompt::before {
+  content: '›';
+  color: #00875a; margin-right: 6px;
+  font-size: 13px;
+}
+.card-prompt .hl  { color: #ffd54f; }
+.card-prompt .var { color: #80cbc4; font-style: italic; }
+.card-prompt .op  { color: #f48fb1; }
+
+/* what MCP does behind the scenes */
+.card-tools {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  margin-bottom: 12px;
+}
+.tool-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 0.5px;
+  padding: 3px 7px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--fog);
+  background: var(--warm);
+}
+
+/* why it's powerful */
+.card-why {
+  font-size: 12px; color: var(--steel);
+  line-height: 1.6;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+.card-why strong { color: var(--ink); font-weight: 600; }
+
+/* copy button */
+.copy-btn {
+  position: absolute; bottom: 22px; right: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 5px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: none; cursor: pointer;
+  color: var(--fog);
+  transition: all 0.15s;
+}
+.copy-btn:hover {
+  background: var(--qgreen); color: white; border-color: var(--qgreen);
+}
+.copy-btn.copied {
+  background: var(--qgreen); color: white; border-color: var(--qgreen);
+}
+
+/* ── FEATURED CARD (spanning full width) ── */
+.card.featured {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-top: 3px solid var(--qgreen);
+  padding: 0;
+}
+.card.featured:hover { background: #131720; }
+
+.featured-left {
+  padding: 36px 32px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+.featured-mid {
+  padding: 36px 32px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+.featured-right { padding: 36px 32px; }
+
+.featured-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--qlight); margin-bottom: 10px;
+}
+.featured-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 900; line-height: 1.1;
+  color: white; margin-bottom: 12px;
+}
+.featured-title em { color: #7fffbf; font-style: italic; }
+.featured-desc { font-size: 13px; color: #8a9ab0; line-height: 1.65; }
+
+.featured-prompt {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-left: 3px solid var(--qgreen);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; line-height: 1.7;
+  padding: 16px 18px;
+  color: #c8e6c9;
+  border-radius: 0 4px 4px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.featured-prompt .hl  { color: #ffd54f; }
+.featured-prompt .var { color: #80cbc4; font-style: italic; }
+
+.featured-steps {
+  list-style: none;
+  margin-top: 14px;
+}
+.featured-steps li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 12px; color: #8a9ab0;
+  margin-bottom: 9px; line-height: 1.5;
+}
+.step-num {
+  background: var(--qgreen); color: white;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+
+.featured-tools .tool-chip {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  color: #6a88b0;
+}
+
+/* ── DIVIDER RULE ── */
+.section-rule {
+  padding: 0 48px;
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: -1px;
+}
+.section-rule span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--fog); white-space: nowrap;
+}
+.section-rule hr {
+  flex: 1; border: none;
+  border-top: 1px solid var(--rule);
+}
+
+/* ── FOOTER ── */
+.footer {
+  margin-top: 48px;
+  padding: 20px 48px;
+  border-top: 2px solid var(--ink);
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--fog);
+}
+.footer-brand { color: var(--qgreen); font-weight: 700; letter-spacing: 1px; }
+
+/* responsive */
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; padding: 24px; }
+  .card.featured { grid-template-columns: 1fr; }
+  .featured-left, .featured-mid, .featured-right { border: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .masthead { padding: 20px 24px; }
+  .intro-strip { padding: 14px 24px; flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div>
+    <div class="masthead-eyebrow">Qlik MCP · Principal Consultant Edition</div>
+    <h1 class="masthead-title">Prompts that show<br>MCP's <em>true</em> power</h1>
+  </div>
+  <div class="masthead-meta">
+    <div class="issue">Vol. I · March 2026</div>
+    <div class="byline">Jandré Killian</div>
+    <div class="role">Principal Qlik Consultant · Partner Ambassador</div>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="intro-strip">
+  <span class="tag">Context</span>
+  <span>These prompts are engineered to make a CTO, CFO or data team <strong>stop scrolling and lean forward</strong>. Each one chains multiple MCP tools, crosses data domains, and produces something a human analyst would take hours - or days - to assemble. Say these <strong>exactly as written</strong> for maximum impact.</span>
+</div>
+
+<!-- ═══════════ FEATURED MEGA PROMPT ═══════════ -->
+<div class="grid" style="padding-bottom:0">
+  <div class="card featured">
+    <div class="featured-left">
+      <div class="featured-eyebrow">★ The Signature Move · Use this first</div>
+      <div class="featured-title">The End-to-End<br><em>Intelligence Brief</em></div>
+      <div class="featured-desc" style="margin-bottom:16px;">
+        This single prompt forces MCP to search, query, reason, build, and govern - all in one shot.
+        It demonstrates every capability tier simultaneously and produces a boardroom-ready deliverable on the spot.
+        A Qlik consultant with 15 years' experience would need 3 hours. MCP does it in under 90 seconds.
+      </div>
+      <div class="featured-tools" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:auto">
+        <span class="tool-chip">qlik_search</span>
+        <span class="tool-chip">qlik_describe_app</span>
+        <span class="tool-chip">qlik_get_fields</span>
+        <span class="tool-chip">qlik_create_data_object</span>
+        <span class="tool-chip">qlik_list_measures</span>
+        <span class="tool-chip">qlik_create_sheet</span>
+        <span class="tool-chip">qlik_add_chart</span>
+        <span class="tool-chip">qlik_create_glossary</span>
+        <span class="tool-chip">qlik_create_glossary_term</span>
+      </div>
+    </div>
+    <div class="featured-mid">
+      <div class="featured-eyebrow">The Prompt</div>
+      <div class="featured-prompt"><span class="hl">You are acting as my Principal Qlik Consultant.</span>
+
+I want a complete supplier quality intelligence brief on the <span class="var">SAP Procurement</span> app.
+
+Please do the following <span class="op">in a single workflow</span>:
+
+1. Find the top 5 vendors by defect rate
+2. For each vendor, identify their worst-performing product
+3. Calculate the financial cost of those defects using Cost of Goods
+4. Build a new sheet called "<span class="var">Supplier Risk Brief</span>" with:
+   - A KPI for total defect cost
+   - A bar chart: top vendors ranked by defect rate
+   - A table: vendor × product × defects × cost
+5. Create a glossary term "<span class="var">Defect Rate</span>" with a business definition and link it to this app
+6. Give me a 5-sentence executive summary I can paste into a board report</div>
+    </div>
+    <div class="featured-right">
+      <div class="featured-eyebrow">Why it's a showstopper</div>
+      <ul class="featured-steps">
+        <li><div class="step-num">1</div><span><strong style="color:white">Search + describe</strong> - MCP locates the app and reads its full metadata without you touching Qlik</span></li>
+        <li><div class="step-num">2</div><span><strong style="color:white">Live computation</strong> - Defect rates calculated on real data, not pre-cached, using master measures</span></li>
+        <li><div class="step-num">3</div><span><strong style="color:white">Instant visualisation</strong> - A production-quality sheet is built programmatically in the live app</span></li>
+        <li><div class="step-num">4</div><span><strong style="color:white">Governed data catalog</strong> - A business glossary entry is created and linked to the actual data asset</span></li>
+        <li><div class="step-num">5</div><span><strong style="color:white">Board-ready output</strong> - The executive summary is generated with real numbers, not placeholders</span></li>
+      </ul>
+      <div style="margin-top:16px;padding:10px 14px;background:rgba(0,92,53,0.25);border-left:3px solid #00875a;border-radius:0 4px 4px 0">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#00875a;margin-bottom:5px;">WHAT THE AUDIENCE SEES</div>
+        <div style="font-size:12px;color:#8a9ab0;line-height:1.6">A consultant typing one paragraph - and Qlik building itself in real time. That's the moment that sells MCP to a room.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ROW 1 ═══════════ -->
+<div class="section-rule"><hr><span>Analytical Power</span><hr></div>
+<div class="grid">
+
+  <!-- CARD 1 -->
+  <div class="card">
+    <div class="card-num">01</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#00875a"></div>
+      <span style="color:#00875a">Cross-Domain Analysis</span>
+    </div>
+    <div class="card-title">The Anomaly Hunt</div>
+    <div class="card-impact" style="background:#e6f4ee;color:#005c35">
+      ⚡ Instant outlier detection
+    </div>
+    <div class="card-prompt"><span class="hl">Without applying any selections</span>, find me every vendor where the defect rate is <span class="op">more than 2× the company average</span>.
+
+For each one tell me:
+- Which product drives it
+- The cost exposure in USD
+- Whether the same vendor appears in multiple company codes</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_get_fields</span>
+      <span class="tool-chip">qlik_create_data_object</span>
+      <span class="tool-chip">qlik_list_measures</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> "More than 2× the average" requires MCP to compute a benchmark first, then filter against it - two sequential analytical steps. It also crosses vendor, product and company code dimensions in one answer. No pre-built sheet does this.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+  <!-- CARD 2 -->
+  <div class="card">
+    <div class="card-num">02</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#b8860b"></div>
+      <span style="color:#b8860b">Temporal Intelligence</span>
+    </div>
+    <div class="card-title">Year-on-Year Regression</div>
+    <div class="card-impact" style="background:#fef9ec;color:#b8860b">
+      📈 Trend narrative, not just numbers
+    </div>
+    <div class="card-prompt"><span class="hl">Compare defect rates year-by-year</span> from 2016 to 2020.
+
+Identify:
+- Which year had the <span class="op">single biggest jump</span>
+- Which vendors drove that spike
+- Whether the trend has been <span class="var">improving or deteriorating</span>
+
+Then tell me: if the current trajectory continues, what does 2021 look like?</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_create_data_object</span>
+      <span class="tool-chip">qlik_select_values</span>
+      <span class="tool-chip">qlik_clear_selections</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> Asks MCP to loop through years, compute deltas, identify causality, and <em>forecast</em>. The 2021 extrapolation forces real reasoning on top of live data - not just retrieval.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+  <!-- CARD 3 -->
+  <div class="card">
+    <div class="card-num">03</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#c0392b"></div>
+      <span style="color:#c0392b">Risk Intelligence</span>
+    </div>
+    <div class="card-title">The Concentration Risk Check</div>
+    <div class="card-impact" style="background:#fdf0ef;color:#c0392b">
+      🔴 Board-level supply chain risk
+    </div>
+    <div class="card-prompt">I need a <span class="hl">supplier concentration risk report</span>.
+
+Find any vendor that:
+- Supplies to <span class="op">3 or more company codes</span>
+- Has a defect rate <span class="op">above 0.15%</span>
+- Accounts for <span class="op">more than 5%</span> of total spend
+
+For each: name them, quantify the exposure, and tell me which single product I should put under <span class="var">incoming inspection</span> first.</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_create_data_object</span>
+      <span class="tool-chip">qlik_get_field_values</span>
+      <span class="tool-chip">qlik_list_measures</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> Three simultaneous filter conditions applied live to 505K rows. The "incoming inspection" recommendation forces MCP to prioritise - this is consulting-level output, not just a table dump.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+</div>
+
+<!-- ═══════════ ROW 2 ═══════════ -->
+<div class="section-rule"><hr><span>Build & Govern</span><hr></div>
+<div class="grid">
+
+  <!-- CARD 4 -->
+  <div class="card">
+    <div class="card-num">04</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#0070f2"></div>
+      <span style="color:#0070f2">Dashboard Creation</span>
+    </div>
+    <div class="card-title">Build the Sheet I Would Build</div>
+    <div class="card-impact" style="background:#eef4ff;color:#0070f2">
+      🏗️ Consultant-grade sheet, zero clicks
+    </div>
+    <div class="card-prompt"><span class="hl">Act as a senior Qlik dashboard designer.</span>
+
+Build me a "<span class="var">Procurement Health Monitor</span>" sheet with:
+
+- <span class="op">4 KPI tiles</span>: Total Spend, Defect Rate, Cost of Defects, # At-Risk Vendors
+- <span class="op">1 combo chart</span>: Monthly spend (bars) vs defect rate (line) for 2019–2020
+- <span class="op">1 treemap</span>: Spend by vendor, coloured by defect rate
+- <span class="op">1 filter pane</span>: Company Code, Year, Vendor Country
+
+Use master items where available. Label everything for a CFO audience.</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_create_sheet</span>
+      <span class="tool-chip">qlik_list_measures</span>
+      <span class="tool-chip">qlik_list_dimensions</span>
+      <span class="tool-chip">qlik_add_chart</span>
+      <span class="tool-chip">qlik_add_filter</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> Calling MCP a "senior designer" and specifying chart types, audience tone and master item usage shows the audience that governance is automatic - the AI picks master items without being told which ones.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+  <!-- CARD 5 -->
+  <div class="card">
+    <div class="card-num">05</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#7b5ea7"></div>
+      <span style="color:#7b5ea7">Data Governance</span>
+    </div>
+    <div class="card-title">Instant Data Dictionary</div>
+    <div class="card-impact" style="background:#f4eeff;color:#7b5ea7">
+      📖 Governed catalog in minutes
+    </div>
+    <div class="card-prompt"><span class="hl">Create a complete business glossary</span> called "<span class="var">Procurement Quality Standards</span>".
+
+Add these terms with professional definitions:
+- <span class="op">Defect Rate</span> (link to the Defect Rate master measure)
+- <span class="op">Cost of Poor Quality</span> (link to Cost of Defective Products)
+- <span class="op">Supplier Risk Tier</span> (define High/Medium/Low criteria)
+- <span class="op">Incoming Inspection</span> (when it applies)
+
+For each term, set status to "<span class="var">Under Review</span>" and link it to the SAP Procurement app.</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_create_glossary</span>
+      <span class="tool-chip">qlik_create_glossary_term</span>
+      <span class="tool-chip">qlik_create_glossary_term_links</span>
+      <span class="tool-chip">qlik_update_term_status</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> A governed data dictionary is normally a week-long governance project. Watching it happen live - with links back to actual measures - makes the "AI doing governance" moment visceral.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+  <!-- CARD 6 -->
+  <div class="card">
+    <div class="card-num">06</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#00875a"></div>
+      <span style="color:#00875a">Expression Mastery</span>
+    </div>
+    <div class="card-title">Translate This Expression</div>
+    <div class="card-impact" style="background:#e6f4ee;color:#005c35">
+      🧠 Make Qlik readable to anyone
+    </div>
+    <div class="card-prompt"><span class="hl">Explain this Qlik expression in plain English</span>, as if presenting to a finance director who has never used Qlik:
+
+<span class="var">Sum({$&lt;[POSTING_DATE.autoCalendar.Year]
+={'$(=max(year([POSTING_DATE
+.autoCalendar.Year]))-1)'}&gt;}
+[Defects])</span>
+
+Then tell me:
+- What business question it answers
+- How to modify it for a <span class="op">rolling 12-month</span> window instead
+- Whether a master measure already exists for this</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_describe_app</span>
+      <span class="tool-chip">qlik_list_measures</span>
+      <span class="tool-chip">qlik_get_fields</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> MCP reads the actual measure library to confirm whether it already exists - it's not guessing. The rolling 12-month modification shows the AI can write new Qlik syntax on demand, not just read it.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+</div>
+
+<!-- ═══════════ ROW 3 ═══════════ -->
+<div class="section-rule"><hr><span>Consultant Finesse</span><hr></div>
+<div class="grid">
+
+  <!-- CARD 7 -->
+  <div class="card">
+    <div class="card-num">07</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#b8860b"></div>
+      <span style="color:#b8860b">Geo Intelligence</span>
+    </div>
+    <div class="card-title">The Sourcing Geography Audit</div>
+    <div class="card-impact" style="background:#fef9ec;color:#b8860b">
+      🌍 Supply chain geo-risk in seconds
+    </div>
+    <div class="card-prompt"><span class="hl">Map our procurement risk by geography.</span>
+
+Tell me:
+- Which <span class="op">vendor countries</span> account for the highest defect rates
+- Whether any single country represents <span class="op">more than 30%</span> of defective spend
+- Which country I should <span class="var">prioritise for supplier development</span> if I had one budget line
+
+Rank countries by a combined score of: spend volume × defect rate.</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_create_data_object</span>
+      <span class="tool-chip">qlik_get_field_values</span>
+      <span class="tool-chip">qlik_list_dimensions</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> "Prioritise for supplier development if I had one budget line" is a constraint-based decision prompt. MCP has to rank, score and recommend - genuine advisory output, not reporting.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+  <!-- CARD 8 -->
+  <div class="card">
+    <div class="card-num">08</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#c0392b"></div>
+      <span style="color:#c0392b">What-If Scenario</span>
+    </div>
+    <div class="card-title">The Elimination Test</div>
+    <div class="card-impact" style="background:#fdf0ef;color:#c0392b">
+      💡 Scenario modelling, live
+    </div>
+    <div class="card-prompt"><span class="hl">Hypothetically remove our top 3 highest-risk vendors</span> from the data.
+
+What would happen to:
+- Overall defect rate
+- Total cost of poor quality
+- Which vendor would <span class="op">become the new top risk</span>
+
+Give me the before/after as a clean comparison table, and tell me if the improvement justifies the <span class="var">supply chain disruption risk</span>.</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_create_data_object</span>
+      <span class="tool-chip">qlik_select_values</span>
+      <span class="tool-chip">qlik_clear_selections</span>
+      <span class="tool-chip">qlik_get_current_selections</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> Exclusion-based set analysis is a Qlik superpower most analysts never learn. Watching MCP apply and clear selections to simulate vendor removal is a "how did it do that?" moment every time.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+  <!-- CARD 9 -->
+  <div class="card">
+    <div class="card-num">09</div>
+    <div class="card-cat">
+      <div class="cat-dot" style="background:#2c3e50"></div>
+      <span style="color:#2c3e50">The Full Audit</span>
+    </div>
+    <div class="card-title">Describe This App Like You Built It</div>
+    <div class="card-impact" style="background:#f0f2f5;color:#2c3e50">
+      🗂️ Instant app documentation
+    </div>
+    <div class="card-prompt"><span class="hl">You are inheriting this app from another consultant.</span>
+
+Give me a full technical handover document covering:
+- Data model: tables, relationships, row counts
+- All <span class="op">master measures</span> and what they calculate
+- All <span class="op">master dimensions</span> and their source fields
+- Any <span class="var">calculated dimensions or time intelligence</span>
+- Data sources and last reload date
+- 3 things a new developer should know before editing this app</div>
+    <div class="card-tools">
+      <span class="tool-chip">qlik_describe_app</span>
+      <span class="tool-chip">qlik_get_fields</span>
+      <span class="tool-chip">qlik_list_measures</span>
+      <span class="tool-chip">qlik_list_dimensions</span>
+      <span class="tool-chip">qlik_list_sheets</span>
+    </div>
+    <div class="card-why">
+      <strong>Why it lands:</strong> Documentation is the most-skipped step in every Qlik project. MCP does it instantly and completely - using the "inheriting consultant" framing makes it feel like a real handover, not a metadata dump.
+    </div>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span class="footer-brand">Jandré Killian</span>
+  <span>Qlik Partner Ambassador · Johannesburg Qlik Meetup · March 25, 2026</span>
+  <span>MCP endpoint: xx.yy.qlikcloud.com/api/ai/mcp</span>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  // get the prompt text from the sibling .card-prompt
+  const card = btn.closest('.card');
+  const promptEl = card.querySelector('.card-prompt');
+  const text = promptEl ? promptEl.innerText.replace(/^›\s?/, '').trim() : '';
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
