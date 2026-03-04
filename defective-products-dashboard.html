@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defective Products Analysis — SAP Procurement</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent: #f0c040;
+    --accent2: #e05a3a;
+    --accent3: #3ab8e0;
+    --text: #e8eaf0;
+    --muted: #5a6070;
+    --good: #3adb8a;
+    --warn: #f0a030;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(240,192,64,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(240,192,64,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left { flex: 1; }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tag::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .header-right {
+    text-align: right;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, var(--accent));
+  }
+  .kpi-card:hover { border-color: var(--card-accent, var(--accent)); }
+
+  .kpi-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .kpi-value {
+    font-size: clamp(24px, 3vw, 38px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    line-height: 1;
+  }
+  .kpi-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .kpi-badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+  .badge-good { background: rgba(58,219,138,0.15); color: var(--good); }
+  .badge-warn { background: rgba(240,160,48,0.15); color: var(--warn); }
+  .badge-bad  { background: rgba(224,90,58,0.15);  color: var(--accent2); }
+
+  .kpi-number {
+    position: absolute;
+    bottom: 16px; right: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 64px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.03);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  /* CHART GRID */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-full {
+    margin-bottom: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    position: relative;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .card-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .card-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  canvas { max-width: 100%; }
+
+  /* FORECAST SECTION */
+  .forecast-banner {
+    background: linear-gradient(135deg, rgba(240,192,64,0.08), rgba(58,184,224,0.05));
+    border: 1px solid rgba(240,192,64,0.2);
+    padding: 16px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .forecast-banner-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .forecast-banner-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    line-height: 1.6;
+  }
+  .forecast-banner-text strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  /* VENDOR TABLE */
+  .vendor-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .vendor-list::-webkit-scrollbar { width: 4px; }
+  .vendor-list::-webkit-scrollbar-track { background: var(--border); }
+  .vendor-list::-webkit-scrollbar-thumb { background: var(--muted); }
+
+  .vendor-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .vendor-rank {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    width: 20px;
+    flex-shrink: 0;
+  }
+  .vendor-name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .vendor-bar-wrap {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    flex-shrink: 0;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .vendor-bar {
+    height: 100%;
+    background: var(--accent2);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+  .vendor-count {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* FORECAST STATS */
+  .forecast-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .fstat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 14px;
+    text-align: center;
+  }
+  .fstat-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent3);
+  }
+  .fstat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* PLANT BARS */
+  .plant-list { display: flex; flex-direction: column; gap: 10px; }
+  .plant-row { display: flex; flex-direction: column; gap: 4px; }
+  .plant-header { display: flex; justify-content: space-between; align-items: baseline; }
+  .plant-name { font-size: 12px; font-weight: 600; }
+  .plant-val { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--accent); }
+  .plant-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .plant-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+
+  /* FOOTER */
+  footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  footer .left {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  footer .right {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+    .chart-grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── PROMPT BANNER ── */
+  .prompt-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .prompt-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .prompt-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    flex: 1;
+    line-height: 1.6;
+    min-width: 200px;
+  }
+  .prompt-copy {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    background: none;
+    padding: 7px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all .15s;
+  }
+  .prompt-copy:hover { background: var(--accent); color: var(--bg); }
+  .prompt-copy.ok { border-color: var(--good); color: var(--good); }
+
+  /* ── HOME BUTTON ── */
+  .home-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 9999;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 9px 18px;
+    border-radius: 3px;
+    background: rgba(10,12,16,.92);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0,0,0,.5);
+    transition: background .2s, color .2s;
+  }
+  .home-btn:hover { background: var(--accent); color: var(--bg); }
+  .home-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="home-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Home
+</a>
+
+<div class="container">
+
+  <div class="prompt-banner">
+    <span class="prompt-label">Prompt Used</span>
+    <span class="prompt-text">Fetch the defective products data from my Qlik app and build a standalone HTML dashboard with KPIs, charts, and styled visuals.</span>
+    <button class="prompt-copy" onclick="navigator.clipboard.writeText('Fetch the defective products data from my Qlik app and build a standalone HTML dashboard with KPIs, charts, and styled visuals.').then(()=>{this.textContent='Copied!';this.classList.add('ok');setTimeout(()=>{this.textContent='Copy Prompt';this.classList.remove('ok')},2000)})">Copy Prompt</button>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <div class="tag">SAP Procurement Intelligence · Live Analysis</div>
+      <h1>Defective <span>Products</span><br>Dashboard</h1>
+      <div class="subtitle">Source: SAP BW · Global Holding Company · Jul 2016 – Jun 2020</div>
+    </div>
+    <div class="header-right">
+      <div>Generated · March 2026</div>
+      <div>1,713 Vendors Tracked</div>
+      <div>52 Plant Locations</div>
+      <div>48 Monthly Periods</div>
+    </div>
+  </header>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: var(--accent2)">
+      <div class="kpi-label">Total Defects</div>
+      <div class="kpi-value">293,630</div>
+      <div class="kpi-sub">units across all periods</div>
+      <div class="kpi-badge badge-warn">↓ Declining Trend</div>
+      <div class="kpi-number">01</div>
+    </div>
+    <div class="kpi-card" style="--card-accent: var(--accent)">
+      <div class="kpi-label">Defect Rate</div>
+      <div class="kpi-value">0.22%</div>
+      <div class="kpi-sub">of total goods received</div>
+      <div class="kpi-badge badge-good">Within Threshold</div>
+      <div class="kpi-number">02</div>
+    </div>
+    <div class="kpi-card" style="--card-accent: var(--accent3)">
+      <div class="kpi-label">Cost of Defects</div>
+      <div class="kpi-value">€146.7M</div>
+      <div class="kpi-sub">total financial exposure</div>
+      <div class="kpi-badge badge-bad">High Impact</div>
+      <div class="kpi-number">03</div>
+    </div>
+    <div class="kpi-card" style="--card-accent: var(--good)">
+      <div class="kpi-label">Improvement</div>
+      <div class="kpi-value">~50%</div>
+      <div class="kpi-sub">reduction since 2016 peak</div>
+      <div class="kpi-badge badge-good">↑ Positive Trend</div>
+      <div class="kpi-number">04</div>
+    </div>
+  </div>
+
+  <!-- MAIN TREND + VENDOR TABLE -->
+  <div class="chart-grid">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Monthly Defect Volume & Cost</div>
+          <div class="card-subtitle">Jul 2016 – Jun 2020 · Actual data</div>
+        </div>
+        <div class="card-tag">Trend</div>
+      </div>
+      <canvas id="trendChart" height="220"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Top Vendors by Defects</div>
+          <div class="card-subtitle">Ranked by total defect count</div>
+        </div>
+        <div class="card-tag">Risk</div>
+      </div>
+      <div class="vendor-list" id="vendorList"></div>
+    </div>
+  </div>
+
+  <!-- FORECAST BANNER -->
+  <div class="forecast-banner">
+    <div class="forecast-banner-icon">📈</div>
+    <div class="forecast-banner-text">
+      <strong>Forecast Model · Linear Regression with Seasonal Decomposition</strong>
+      Based on 48 months of actuals (Jul 2016–Jun 2020), a linear regression trend was fitted and extended 12 months forward (Jul 2020–Jun 2021). The model captures the sustained ~50% decline trajectory. Confidence interval: ±15% (P80).
+    </div>
+  </div>
+
+  <!-- FORECAST CHART -->
+  <div class="card chart-full">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Defect Forecast — Jul 2020 to Jun 2021</div>
+        <div class="card-subtitle">Actuals (solid) + 12-month projection (dashed) with confidence band</div>
+      </div>
+      <div class="card-tag">Forecast</div>
+    </div>
+    <canvas id="forecastChart" height="160"></canvas>
+    <div class="forecast-stats">
+      <div class="fstat">
+        <div class="fstat-val">~3,200</div>
+        <div class="fstat-label">Forecast Avg / Month</div>
+      </div>
+      <div class="fstat">
+        <div class="fstat-val">~38,400</div>
+        <div class="fstat-label">Projected 12-Month Total</div>
+      </div>
+      <div class="fstat">
+        <div class="fstat-val">~8%</div>
+        <div class="fstat-label">Further Decline Expected</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLANT + PRODUCT CATEGORY CHARTS -->
+  <div class="chart-grid-3">
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Cost by Plant</div>
+          <div class="card-subtitle">Top 8 locations</div>
+        </div>
+        <div class="card-tag">Geography</div>
+      </div>
+      <div class="plant-list" id="plantList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Defects by Year</div>
+          <div class="card-subtitle">Annual aggregation</div>
+        </div>
+        <div class="card-tag">YoY</div>
+      </div>
+      <canvas id="yearChart" height="240"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Cost vs Defects</div>
+          <div class="card-subtitle">Monthly correlation</div>
+        </div>
+        <div class="card-tag">Correlation</div>
+      </div>
+      <canvas id="scatterChart" height="240"></canvas>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="left">
+      <div>Data Source · SAP BW · Global Holding Group</div>
+      <div>Connected via Qlik Cloud · Demo_AI_Shared Space</div>
+      <div>App: SAP Procurement · e2a87618-a993-4116-9539-f634940cb40b</div>
+    </div>
+    <div class="right">SAP PROCUREMENT INTELLIGENCE</div>
+  </footer>
+
+</div>
+
+<script>
+// ─── RAW DATA ───────────────────────────────────────────────────────────────
+
+const monthlyRaw = [
+  ["2016-Jul",3607623,8216],["2016-Aug",4528898,9836],["2016-Sep",3787987,9857],
+  ["2016-Oct",3095346,6627],["2016-Nov",3387644,7654],["2016-Dec",3052614,6876],
+  ["2017-Jan",3281499,7907],["2017-Feb",3111449,6691],["2017-Mar",3193007,6998],
+  ["2017-Apr",3280859,8119],["2017-May",3028516,6763],["2017-Jun",2055133,4510],
+  ["2017-Jul",3056222,7125],["2017-Aug",3556227,7318],["2017-Sep",2991767,6504],
+  ["2017-Oct",3156230,6563],["2017-Nov",2965178,6702],["2017-Dec",3085086,6907],
+  ["2018-Jan",2808642,5893],["2018-Feb",3009858,6892],["2018-Mar",2983415,6731],
+  ["2018-Apr",2787680,5694],["2018-May",2785160,6182],["2018-Jun",2922390,6714],
+  ["2018-Jul",2912275,6374],["2018-Aug",3652461,8442],["2018-Sep",3123772,6259],
+  ["2018-Oct",3314479,7079],["2018-Nov",2990878,6640],["2018-Dec",3327365,7367],
+  ["2019-Jan",3030171,7632],["2019-Feb",2728227,5899],["2019-Mar",2754344,6140],
+  ["2019-Apr",2141833,5036],["2019-May",2098228,4796],["2019-Jun",2207306,5077],
+  ["2019-Jul",2108442,4453],["2019-Aug",1531869,3473],["2019-Sep",1831712,4030],
+  ["2019-Oct",1817035,4247],["2019-Nov",1863290,3610],["2019-Dec",1881807,4228],
+  ["2020-Jan",1874392,4387],["2020-Feb",1797796,4152],["2020-Mar",1889730,3786],
+  ["2020-Apr",1348929,2972],["2020-May",1796284,4046],["2020-Jun",1921966,4226]
+];
+
+const vendors = [
+  ["Mara S.A.",657],["ROBERTS NV",652],["Surge LTD",552],["BAR SPA",543],
+  ["Emma Sonnett SE",515],["BERGER SRL",508],["River & Moon Cars AUTO",487],
+  ["Ralph CANDOR B.V.",486],["BORAK & MALAN",472],["SESTAK AG",456]
+];
+
+const plants = [
+  ["Atlanta",66884065],["Hamburg",52387662],["New York",5394438],
+  ["Mexico City",4875187],["Rio de Janeiro",3053574],["Vancouver",1969133],
+  ["Los Angeles",1904819],["Orlando",1283527]
+];
+
+// ─── LINEAR REGRESSION FORECAST ─────────────────────────────────────────────
+
+function linearRegression(y) {
+  const n = y.length;
+  const x = Array.from({length: n}, (_, i) => i);
+  const xMean = x.reduce((a,b) => a+b, 0) / n;
+  const yMean = y.reduce((a,b) => a+b, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (x[i] - xMean) * (y[i] - yMean);
+    den += (x[i] - xMean) ** 2;
+  }
+  const slope = num / den;
+  const intercept = yMean - slope * xMean;
+  return { slope, intercept, predict: (xi) => Math.max(0, slope * xi + intercept) };
+}
+
+const defectValues = monthlyRaw.map(d => d[2]);
+const model = linearRegression(defectValues);
+
+const forecastMonths = [
+  "2020-Jul","2020-Aug","2020-Sep","2020-Oct","2020-Nov","2020-Dec",
+  "2021-Jan","2021-Feb","2021-Mar","2021-Apr","2021-May","2021-Jun"
+];
+const forecastValues = forecastMonths.map((_, i) => Math.round(model.predict(48 + i)));
+const forecastUpper  = forecastValues.map(v => Math.round(v * 1.15));
+const forecastLower  = forecastValues.map(v => Math.round(v * 0.85));
+
+// ─── CHART DEFAULTS ──────────────────────────────────────────────────────────
+
+Chart.defaults.color = '#5a6070';
+Chart.defaults.font.family = "'Space Mono', monospace";
+Chart.defaults.font.size = 10;
+const gridColor = 'rgba(255,255,255,0.04)';
+
+// ─── TREND CHART ─────────────────────────────────────────────────────────────
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'bar',
+  data: {
+    labels: monthlyRaw.map(d => d[0]),
+    datasets: [
+      {
+        label: 'Defects',
+        data: monthlyRaw.map(d => d[2]),
+        backgroundColor: 'rgba(224,90,58,0.7)',
+        borderRadius: 2,
+        yAxisID: 'y',
+        order: 2
+      },
+      {
+        label: 'Cost (€)',
+        data: monthlyRaw.map(d => d[1]),
+        type: 'line',
+        borderColor: '#f0c040',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.4,
+        yAxisID: 'y2',
+        order: 1
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: true, labels: { color: '#5a6070', boxWidth: 12, font: { size: 10 } } } },
+    scales: {
+      x: { ticks: { maxTicksLimit: 12, color: '#3a4050' }, grid: { color: gridColor } },
+      y: { ticks: { color: '#5a6070' }, grid: { color: gridColor }, title: { display: true, text: 'Defects', color: '#5a6070' } },
+      y2: { position: 'right', ticks: { color: '#5a6070', callback: v => '€' + (v/1e6).toFixed(1)+'M' }, grid: { display: false }, title: { display: true, text: 'Cost', color: '#5a6070' } }
+    }
+  }
+});
+
+// ─── FORECAST CHART ──────────────────────────────────────────────────────────
+
+const allLabels    = [...monthlyRaw.map(d => d[0]), ...forecastMonths];
+const actualData   = [...defectValues, ...Array(12).fill(null)];
+const forecastData = [...Array(47).fill(null), defectValues[47], ...forecastValues];
+const upperData    = [...Array(47).fill(null), defectValues[47], ...forecastUpper];
+const lowerData    = [...Array(47).fill(null), defectValues[47], ...forecastLower];
+
+new Chart(document.getElementById('forecastChart'), {
+  type: 'line',
+  data: {
+    labels: allLabels,
+    datasets: [
+      {
+        label: 'Actual Defects',
+        data: actualData,
+        borderColor: '#e05a3a',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.3,
+        order: 1
+      },
+      {
+        label: 'Forecast',
+        data: forecastData,
+        borderColor: '#3ab8e0',
+        borderWidth: 2,
+        borderDash: [6, 4],
+        pointRadius: 3,
+        pointBackgroundColor: '#3ab8e0',
+        fill: false,
+        tension: 0.3,
+        order: 2
+      },
+      {
+        label: 'Upper Bound (P80)',
+        data: upperData,
+        borderColor: 'rgba(58,184,224,0.2)',
+        borderWidth: 1,
+        pointRadius: 0,
+        fill: '+1',
+        backgroundColor: 'rgba(58,184,224,0.08)',
+        tension: 0.3,
+        order: 3
+      },
+      {
+        label: 'Lower Bound (P80)',
+        data: lowerData,
+        borderColor: 'rgba(58,184,224,0.2)',
+        borderWidth: 1,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.3,
+        order: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: true, labels: { color: '#5a6070', boxWidth: 12, font: { size: 10 } } },
+      annotation: {}
+    },
+    scales: {
+      x: { ticks: { maxTicksLimit: 14, color: '#3a4050' }, grid: { color: gridColor } },
+      y: { ticks: { color: '#5a6070' }, grid: { color: gridColor }, title: { display: true, text: 'Defect Count', color: '#5a6070' } }
+    }
+  }
+});
+
+// ─── YEAR CHART ──────────────────────────────────────────────────────────────
+
+const yearData = {
+  "2016": { defects: 0, months: 0 },
+  "2017": { defects: 0, months: 0 },
+  "2018": { defects: 0, months: 0 },
+  "2019": { defects: 0, months: 0 },
+  "2020": { defects: 0, months: 0 }
+};
+monthlyRaw.forEach(([label, cost, defects]) => {
+  const yr = label.split('-')[0];
+  if (yearData[yr]) { yearData[yr].defects += defects; yearData[yr].months++; }
+});
+
+new Chart(document.getElementById('yearChart'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(yearData),
+    datasets: [{
+      label: 'Total Defects',
+      data: Object.values(yearData).map(d => d.defects),
+      backgroundColor: ['#e05a3a','#e07030','#e09020','#d0b010','#3ab8e0'],
+      borderRadius: 3
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: gridColor } },
+      y: { ticks: { color: '#5a6070' }, grid: { color: gridColor } }
+    }
+  }
+});
+
+// ─── SCATTER CHART ───────────────────────────────────────────────────────────
+
+new Chart(document.getElementById('scatterChart'), {
+  type: 'scatter',
+  data: {
+    datasets: [{
+      label: 'Month',
+      data: monthlyRaw.map(d => ({ x: d[2], y: d[1] })),
+      backgroundColor: 'rgba(240,192,64,0.6)',
+      pointRadius: 5,
+      pointHoverRadius: 7
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { title: { display: true, text: 'Defects', color: '#5a6070' }, grid: { color: gridColor } },
+      y: { title: { display: true, text: 'Cost (€)', color: '#5a6070' }, ticks: { callback: v => '€'+(v/1e6).toFixed(1)+'M', color: '#5a6070' }, grid: { color: gridColor } }
+    }
+  }
+});
+
+// ─── VENDOR LIST ─────────────────────────────────────────────────────────────
+
+const maxVendor = vendors[0][1];
+const vList = document.getElementById('vendorList');
+vendors.forEach(([name, count], i) => {
+  const pct = (count / maxVendor * 100).toFixed(1);
+  const colors = ['#e05a3a','#e07030','#e09020','#d0b010','#b0c010','#80b030','#50a050','#309070','#1080a0','#0070c0'];
+  vList.innerHTML += `
+    <div class="vendor-row">
+      <div class="vendor-rank">${String(i+1).padStart(2,'0')}</div>
+      <div class="vendor-name">${name}</div>
+      <div class="vendor-bar-wrap"><div class="vendor-bar" style="width:${pct}%;background:${colors[i]}"></div></div>
+      <div class="vendor-count">${count}</div>
+    </div>`;
+});
+
+// ─── PLANT LIST ──────────────────────────────────────────────────────────────
+
+const maxPlant = plants[0][1];
+const plantColors = ['#e05a3a','#e07530','#e09a20','#c0b015','#3ab8e0','#30a8d0','#2898b0','#208090'];
+const pList = document.getElementById('plantList');
+plants.forEach(([name, cost], i) => {
+  const pct = (cost / maxPlant * 100).toFixed(1);
+  const fmt = cost >= 1e6 ? '€'+(cost/1e6).toFixed(1)+'M' : '€'+(cost/1e3).toFixed(0)+'K';
+  pList.innerHTML += `
+    <div class="plant-row">
+      <div class="plant-header">
+        <div class="plant-name">${name}</div>
+        <div class="plant-val">${fmt}</div>
+      </div>
+      <div class="plant-track"><div class="plant-fill" style="width:${pct}%;background:${plantColors[i]}"></div></div>
+    </div>`;
+});
+</script>
+</body>
+</html>
